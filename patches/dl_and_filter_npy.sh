@@ -10,8 +10,13 @@ set -euo pipefail
 # (iii) search the new directory for any file not listed in the filtered txt file
 # (iv) and deletes them if not found
 
-#tar_ids=('01' '02' '03' '04' '05' '06' '07' '08' '09' '10' '11' '12' '13' '14' '15' '16' '17' '18' '19' '20')
-tar_ids=('03' '06' '07' '08' '09')
+## Requirements: 
+# (1) azcopy is downloaded and in this (./patches) directory
+# (2) the previous output of json_parser.py (which contains the filenames of the filtered json records) is in this (./patches) directory
+
+# Redefine the array as needed
+tar_ids=('01' '02' '03' '04' '05' '06' '07' '08' '09' '10' '11' '12' '13' '14' '15' '16' '17' '18' '19' '20')
+#tar_ids=('06' '07' '08' '09')
 
 for tid in ${tar_ids[@]}; do
 
