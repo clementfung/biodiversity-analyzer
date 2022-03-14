@@ -2,6 +2,7 @@ import rasterio
 import matplotlib.pyplot as plt
 import numpy as np
 
+import json
 import glob
 import pdb
 
@@ -14,7 +15,7 @@ def int_to_id(index):
 	else:
 		return f'00'
 
-if __name__ == '__main__':
+def process_demo():
 
 	channel_file_index = 0
 	alti_file_index = 0
@@ -65,6 +66,60 @@ if __name__ == '__main__':
 	np.save('Xaltitude.npy', altitude_input)
 	np.save('Xcover.npy', cover_input)
 
+def process_filtered_rgb():
+
+	channel_file_index = 0
+
+	# Clement: For now, just doing 10 subdirectories each in the first 10 directories
+	n_files = 8266
+	rgb_channel_input = np.zeros((n_files, 256, 256, 3))
+	rgb_files = []
+
+	for value in range(50):
+
+		patches_dir = (value // 5 + 1)
+		filepath  = f'patches/patches_fr_{int_to_id(patches_dir)}/{int_to_id(value)}'
+
+		datafiles = glob.glob(f'{filepath}/*/*.npy')
+
+		# Clement: slightly hacky indexing here, but assuming we trust the sorting alg, it looks like it all lines up.
+		for file in sorted(datafiles):
+
+			print(f'Processing {file}')
+
+			#area_data = np.load(file)
+			#rgb_channel_input[channel_file_index] = area_data[:, :, 0:3] / 256
+			channel_file_index += 1
+
+	print(f'Processed {channel_file_index} RGB-IR files')
+	np.save('Xrgb_filtered.npy', rgb_channel_input)
+
+def process_filtered_labels():
+
+	y_idx = 0
+	y_obj = np.zeros(8266)
+	big_obj = dict()
+
+	with open(f'annotations_train_filtered_fr_parsed.json', "r") as f:
+		
+		x = json.load(f)
+
+		for item in x:
+			if int(item["file_name"][:2]) < 50:
+				big_obj[item["file_name"]] = item["category"]
+
+	for key in sorted(big_obj.keys()):
+		y_obj[y_idx] = big_obj[key]
+		y_idx += 1
+
+	np.save('yrgb_filtered.npy', y_obj)
+	pdb.set_trace()
+
+if __name__ == '__main__':
+
+	#process_filtered_rgb()
+
+	process_filtered_labels()
 	pdb.set_trace()
 
 

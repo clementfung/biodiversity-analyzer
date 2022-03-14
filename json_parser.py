@@ -1,5 +1,6 @@
 import os, json, sys
 import pdb
+import numpy
 
 def parse_annotations(filename, output_tag, filtering=False):
 
