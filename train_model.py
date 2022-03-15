@@ -6,6 +6,7 @@ from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.layers import Input, Dense, Conv2D, BatchNormalization, MaxPool1D, Flatten
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras import optimizers
+from keras.utils import np_utils
 
 def create_model(n_classes=10):
 	""" Creates Keras CNN model.   """
@@ -24,11 +25,11 @@ def create_model(n_classes=10):
 	cnn_layer1 = BatchNormalization()(cnn_layer1)
 
 	flatten = Flatten()(cnn_layer1)
-	dense_out = Dense(n_classes)(flatten)
+	dense_out = Dense(n_classes, activation='softmax')(flatten)
 	
 	# Define the total model
 	model = Model(input_layer, dense_out)
-	model.compile(loss='sparse_categorical_crossentropy', optimizer='adam')
+	model.compile(loss='categorical_crossentropy', optimizer='adam')
 
 	if verbose:
 		print(model.summary())
@@ -40,13 +41,36 @@ if __name__ == '__main__':
 	
 	### A minimal working example of a trained CNN on some fake data.
 
-	batch_size = 32
-	n_classes = 10
+	n_classes = 21
+
+	n_samples = 8266
+	split_idx = 7000
 
 	model = create_model(n_classes=n_classes)
-	Xrgb = np.load('Xrgb.npy')
+	
+	Xrgb = np.load('Xrgb_filtered.npy')
+	yrgb = np.load('yrgb_filtered.npy')
 
-	Xtrain = Xrgb[:batch_size]
-	ytrain = np.floor(np.random.rand(batch_size) * n_classes)
-	model.fit(Xtrain, ytrain, epochs=10)
+	yrgb_cat = np_utils.to_categorical(yrgb)
+	Xtrain = Xrgb[:split_idx]
+	ytrain = yrgb_cat[:split_idx]
+
+	Xtest = Xrgb[split_idx:]
+	ytest = yrgb_cat[split_idx:]
+
+	train_history = model.fit(Xtrain, ytrain, epochs=10)
+	ypred = model.predict(Xtest)
+	ytrain_pred = model.predict(Xtrain)
+
+	train_accuracy = np.mean(np.argmax(ytrain_pred, axis=1) == np.argmax(ytrain, axis=1))
+	test_accuracy = np.mean(np.argmax(ypred, axis=1) == np.argmax(ytest, axis=1))
+
+	print(f"train accuracy is {train_accuracy}")
+	print(f"test accuracy is {test_accuracy}")
+
+	loss_obj = train_history.history['loss']
+	np.save(f'history.npy', loss_obj)
+
+	# Add breakpoint in case some checks are needed
+	pdb.set_trace()
 
