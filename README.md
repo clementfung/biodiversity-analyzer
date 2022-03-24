@@ -20,16 +20,18 @@ There are two outputs: (1) a reformatted JSON which includes the category_id (la
 Optionally, this script can also filter out all category_id's above a certain value.  
 i.e. It's useful to restrict the eventual ML model to the top 20 classes for easier training and eval.
 
-Example usage: `python3 json_parser.py annotations_train.json` (see the file for how the filtering works)
+Example usage: `python3 json_parser.py annotations_train.json` (see the file for how the filtering works)  
+
+### dl_and_filter_npy.sh
+
+This is a bash script which, given a list of filenames (the output of `json_parser`, for example, `annotations_train_filtered_fr.txt`), downloads all the az patches, and deletes all the subdirectories not found in the filelist.
 
 ### process_patches.py
 
-> Mostly still an example for now
-
-Given a set of input `.npy` files, this script will separate out the data format into n-by-d formatting matrices, ready to be used for machine learning.
+Given a set of input `.npy` files, (if you used the bash script above, the remaining directories in `\patches`) this script will load each out and separate out the data format into n-by-d formatting matrices, ready to be used for machine learning.
 
 ### train_model.py
 
 > Mostly still an example for now
 
-Given a set of input processed `.npy` files (the output of `process_patches.py`), this script will perform a very basic CNN training.
+Given a set of input processed `.npy` files (the output of `process_patches.py`), this script will perform a very basic CNN training, and output the train/test accuracy, as well as the loss curve.

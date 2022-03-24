@@ -41,9 +41,9 @@ if __name__ == '__main__':
 	
 	### A minimal working example of a trained CNN on some fake data.
 
-	n_classes = 21
+	n_classes = 20
 
-	n_samples = 8266
+	n_samples = 8248
 	split_idx = 7000
 
 	model = create_model(n_classes=n_classes)
@@ -58,18 +58,20 @@ if __name__ == '__main__':
 	Xtest = Xrgb[split_idx:]
 	ytest = yrgb_cat[split_idx:]
 
-	train_history = model.fit(Xtrain, ytrain, epochs=10)
-	ypred = model.predict(Xtest)
-	ytrain_pred = model.predict(Xtrain)
-
-	train_accuracy = np.mean(np.argmax(ytrain_pred, axis=1) == np.argmax(ytrain, axis=1))
-	test_accuracy = np.mean(np.argmax(ypred, axis=1) == np.argmax(ytest, axis=1))
-
-	print(f"train accuracy is {train_accuracy}")
-	print(f"test accuracy is {test_accuracy}")
-
+	train_history = model.fit(Xtrain, ytrain, epochs=5)
 	loss_obj = train_history.history['loss']
 	np.save(f'history.npy', loss_obj)
+
+	ypred = model.predict(Xtest)
+	test_accuracy = np.mean(np.argmax(ypred, axis=1) == np.argmax(ytest, axis=1))
+	print(f"test accuracy is {test_accuracy}")
+
+	pdb.set_trace()
+
+	# Sometimes train accuracy crashes OOM. Moved it to the end for now
+	ytrain_pred = model.predict(Xtrain)
+	train_accuracy = np.mean(np.argmax(ytrain_pred, axis=1) == np.argmax(ytrain, axis=1))
+	print(f"train accuracy is {train_accuracy}")
 
 	# Add breakpoint in case some checks are needed
 	pdb.set_trace()

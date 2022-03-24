@@ -71,7 +71,7 @@ def process_filtered_rgb():
 	channel_file_index = 0
 
 	# Clement: For now, just doing 10 subdirectories each in the first 10 directories
-	n_files = 8266
+	n_files = 8248
 	rgb_channel_input = np.zeros((n_files, 256, 256, 3))
 	rgb_files = []
 
@@ -87,8 +87,8 @@ def process_filtered_rgb():
 
 			print(f'Processing {file}')
 
-			#area_data = np.load(file)
-			#rgb_channel_input[channel_file_index] = area_data[:, :, 0:3] / 256
+			area_data = np.load(file)
+			rgb_channel_input[channel_file_index] = area_data[:, :, 0:3] / 256
 			channel_file_index += 1
 
 	print(f'Processed {channel_file_index} RGB-IR files')
@@ -97,7 +97,7 @@ def process_filtered_rgb():
 def process_filtered_labels():
 
 	y_idx = 0
-	y_obj = np.zeros(8266)
+	y_obj = np.zeros(8248)
 	big_obj = dict()
 
 	with open(f'annotations_train_filtered_fr_parsed.json', "r") as f:
@@ -112,14 +112,14 @@ def process_filtered_labels():
 		y_obj[y_idx] = big_obj[key]
 		y_idx += 1
 
+	print(f'Processed {y_idx} labels')
 	np.save('yrgb_filtered.npy', y_obj)
-	pdb.set_trace()
 
 if __name__ == '__main__':
 
-	#process_filtered_rgb()
-
+	process_filtered_rgb()
 	process_filtered_labels()
+	
 	pdb.set_trace()
 
 

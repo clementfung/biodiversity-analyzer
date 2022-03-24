@@ -28,7 +28,7 @@ def parse_annotations(filename, output_tag, filtering=False):
             category_id = x['annotations'][i]['category_id']
 
             # Try using only the first 20 categories
-            if filtering and category_id > 20:
+            if filtering and category_id > 19:
                 continue
                 
             new_record = dict()
