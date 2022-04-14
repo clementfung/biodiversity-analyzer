@@ -13,7 +13,7 @@ def create_model(n_classes=10):
 	""" Creates Keras CNN model.   """
 
 	# retrieve params
-	units = 32
+	units = 16
 	layers = 2
 	activation = 'relu'
 	kernel_size = 5
@@ -24,19 +24,16 @@ def create_model(n_classes=10):
 	input_shape = (256, 256, 3)
 
 	input_layer = Input(shape=input_shape)
-	cnn_layer1 = Conv2D(filters=units, kernel_size=kernel_size, activation=activation, 
+	cnn_layer = Conv2D(filters=units, kernel_size=kernel_size, activation=activation, 
 		kernel_regularizer=regularizers.l2(reg_weight))(input_layer)
-	cnn_layer1 = BatchNormalization()(cnn_layer1)
-	
-	cnn_layer2 = Conv2D(filters=units, kernel_size=kernel_size, activation=activation, 
-		kernel_regularizer=regularizers.l2(reg_weight))(cnn_layer1)
-	cnn_layer2 = BatchNormalization()(cnn_layer2)
+	cnn_layer = BatchNormalization()(cnn_layer)
 
-	cnn_layer3 = Conv2D(filters=units, kernel_size=kernel_size, activation=activation, 
-		kernel_regularizer=regularizers.l2(reg_weight))(cnn_layer2)
-	cnn_layer3 = BatchNormalization()(cnn_layer3)
+	for _ in range(layers - 1):
+		cnn_layer = Conv2D(filters=units, kernel_size=kernel_size, activation=activation, 
+			kernel_regularizer=regularizers.l2(reg_weight))(cnn_layer)
+		cnn_layer = BatchNormalization()(cnn_layer)
 
-	flatten = Flatten()(cnn_layer3)
+	flatten = Flatten()(cnn_layer)
 	dense_out = Dense(n_classes, activation='softmax', kernel_regularizer=regularizers.l2(reg_weight))(flatten)
 	
 	# Define the total model
