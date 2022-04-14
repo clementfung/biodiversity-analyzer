@@ -71,14 +71,14 @@ def process_filtered_rgb():
 	channel_file_index = 0
 
 	# Clement: For now, just doing 10 subdirectories each in the first 10 directories
-	n_files = 8248
+	n_files = 14363
 	rgb_channel_input = np.zeros((n_files, 256, 256, 3))
 	rgb_files = []
 
-	for value in range(50):
+	for value in range(20):
 
 		patches_dir = (value // 5 + 1)
-		filepath  = f'patches/patches_fr_{int_to_id(patches_dir)}/{int_to_id(value)}'
+		filepath  = f'patches/patches_us_{int_to_id(patches_dir)}/{int_to_id(value)}'
 
 		datafiles = glob.glob(f'{filepath}/*/*.npy')
 
@@ -97,15 +97,15 @@ def process_filtered_rgb():
 def process_filtered_labels():
 
 	y_idx = 0
-	y_obj = np.zeros(8248)
+	y_obj = np.zeros(14363)
 	big_obj = dict()
 
-	with open(f'annotations_train_filtered_fr_parsed.json', "r") as f:
+	with open(f'annotations_train_top20_us_parsed.json', "r") as f:
 		
 		x = json.load(f)
 
 		for item in x:
-			if int(item["file_name"][:2]) < 50:
+			if int(item["file_name"][:2]) < 20:
 				big_obj[item["file_name"]] = item["category"]
 
 	for key in sorted(big_obj.keys()):

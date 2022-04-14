@@ -1,6 +1,28 @@
 import os, json, sys
 import pdb
-import numpy
+import numpy as np
+
+def count_categories(filename):
+
+    with open(filename, "r") as f:        
+        x = json.load(f)
+
+    num_categories = x['categories'][-1]['id'] + 1
+    counts = np.zeros(num_categories)
+
+    for i in range(len(x['annotations'])):
+        this_category = x['annotations'][i]['category_id']
+        counts[this_category] += 1
+
+    top_k = np.argsort(counts)[-20:]
+    total_sum = 0
+
+    for i in top_k:
+        print(f'Most common: {counts[i]} {x["categories"][i]["gbif_name"]}')
+        total_sum += counts[i]
+
+    print(f'A total of {total_sum} records in top 20')
+    return top_k
 
 def parse_annotations(filename, output_tag, filtering=False):
 
@@ -11,48 +33,53 @@ def parse_annotations(filename, output_tag, filtering=False):
     total_filenames_us = []
 
     with open(filename, "r") as f:
-        
-        x  = json.load(f)
+        x = json.load(f)
 
-        print(len(x['images']))
-        print(len(x['annotations']))
+    print(len(x['images']))
+    print(len(x['annotations']))
 
-        for i in range(len(x['images'])):
-            image_id = x['images'][i]['id']
-            tag_id = x['annotations'][i]['image_id']
+    top_k_categories = count_categories(filename)
 
-            if image_id != tag_id:
-                print(f'SOMETHING WENT WRONG AT RECORD {i}')
-                return
+    for i in range(len(x['images'])):
+        image_id = x['images'][i]['id']
+        tag_id = x['annotations'][i]['image_id']
 
-            category_id = x['annotations'][i]['category_id']
+        if image_id != tag_id:
+            print(f'SOMETHING WENT WRONG AT RECORD {i}')
+            return
 
-            # Try using only the first 20 categories
-            if filtering and category_id > 19:
-                continue
-                
-            new_record = dict()
-            for key in x['images'][i].keys():
+        category_id = x['annotations'][i]['category_id']
 
-                new_record[key] = x['images'][i][key]
-                new_record['category'] = category_id
+        # Use only the top 20 categories
+        if filtering and category_id not in top_k_categories:
+            continue
+            
+        new_record = dict()
+        for key in x['images'][i].keys():
 
-            country = x['images'][i]["country"]
+            new_record[key] = x['images'][i][key]
+            new_record['category'] = category_id
 
-            if country == "fr":
-                total_filenames_fr.append(x['images'][i]['file_name'])
-                total_records_fr.append(new_record)
-            elif country == "us":
-                total_filenames_us.append(x['images'][i]['file_name'])
-                total_records_us.append(new_record)
-            else:
-                print(f'Unknown country: {country}')
+        country = x['images'][i]["country"]
+
+        if country == "fr":
+            total_filenames_fr.append(x['images'][i]['file_name'])
+            total_records_fr.append(new_record)
+        elif country == "us":
+            total_filenames_us.append(x['images'][i]['file_name'])
+            total_records_us.append(new_record)
+        else:
+            print(f'Unknown country: {country}')
+
+    total_records = total_records_us + total_records_fr
+    total_filenames = total_filenames_us + total_filenames_fr
 
     print(f'Final output length (fr): {len(total_records_fr)}')
     print(f'Final output length (us): {len(total_records_us)}')
+    print(f'Final output length: {len(total_records)}')
 
     if filtering:
-        output_tag = f'{output_tag}_filtered'
+        output_tag = f'{output_tag}_top20'
 
     # Save france files
     with open(f'{output_tag}_fr_parsed.json', "w") as output:
@@ -68,6 +95,14 @@ def parse_annotations(filename, output_tag, filtering=False):
 
     with open(f'{output_tag}_us_files.txt', "w") as output:
         for file in sorted(total_filenames_us):
+            output.write(f'{file}\n')
+
+    # Save total files
+    with open(f'{output_tag}_parsed.json', "w") as output:
+        json.dump(total_records, output)
+
+    with open(f'{output_tag}_files.txt', "w") as output:
+        for file in sorted(total_filenames):
             output.write(f'{file}\n')
 
 if __name__ == '__main__':
