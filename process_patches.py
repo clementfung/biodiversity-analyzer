@@ -73,7 +73,6 @@ def process_filtered_rgb():
 	# Clement: For now, just doing 10 subdirectories each in the first 10 directories
 	n_files = 14363
 	rgb_channel_input = np.zeros((n_files, 256, 256, 3))
-	rgb_files = []
 
 	for value in range(20):
 
@@ -92,7 +91,52 @@ def process_filtered_rgb():
 			channel_file_index += 1
 
 	print(f'Processed {channel_file_index} RGB-IR files')
-	np.save('Xrgb_filtered.npy', rgb_channel_input)
+	np.save('Xrgb_top20.npy', rgb_channel_input)
+
+def process_filtered_ir_coverage():
+
+	channel_file_index = 0
+
+	# Clement: For now, just doing 10 subdirectories each in the first 10 directories
+	n_files = 14363
+	
+	altitude_input = np.zeros((n_files, 256, 256))
+	ir_channel_input = np.zeros((n_files, 256, 256))
+	coverage_input = np.zeros((n_files, 256, 256))
+
+	for value in range(20):
+
+		patches_dir = (value // 5 + 1)
+		filepath  = f'patches/patches_us_{int_to_id(patches_dir)}/{int_to_id(value)}'
+
+		datafiles = glob.glob(f'{filepath}/*/*.npy')
+
+		# Clement: slightly hacky indexing here, but assuming we trust the sorting alg, it looks like it all lines up.
+		for file in sorted(datafiles):
+
+			print(f'Processing {file}')
+
+			area_data = np.load(file)
+			ir_channel_input[channel_file_index] = area_data[:, :, 3] / 256
+			coverage_input[channel_file_index] = area_data[:, :, 4]
+
+			channel_file_index += 1
+
+	print(f'Processed {channel_file_index} IR-coverage files')
+	np.save('Xir_top20.npy', ir_channel_input)
+	np.save('Xcoverage_top20.npy', summarize_coverage(coverage_input))
+
+def summarize_coverage(coverage_input):
+
+	num_coverage_categories = 34
+	n_files = len(coverage_input)
+	coverage_out = np.zeros((n_files, num_coverage_categories))
+
+	for i in range(n_files):
+		for j in range(num_coverage_categories):
+			coverage_out[i, j] = np.mean(coverage_input[i] == j)
+
+	return coverage_out
 
 def process_filtered_labels():
 
@@ -113,11 +157,20 @@ def process_filtered_labels():
 		y_idx += 1
 
 	print(f'Processed {y_idx} labels')
-	np.save('yrgb_filtered.npy', y_obj)
+
+	# Replace labels with 0-19
+	label_mapping = np.unique(y_obj).astype(int)
+	y_top20 = np.zeros_like(y_obj)
+	for i in range(len(label_mapping)):
+		old_label = label_mapping[i]
+		y_top20[np.where(y_obj == old_label)] = i
+
+	np.save('y_top20.npy', y_top20)
 
 if __name__ == '__main__':
 
-	process_filtered_rgb()
+	#process_filtered_rgb()
+	process_filtered_ir_coverage()
 	process_filtered_labels()
 	
 	pdb.set_trace()
