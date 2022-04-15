@@ -34,6 +34,7 @@ def create_model(n_classes=10, n_units=16, n_layers=2, reg_weight=0.1):
 
 	if verbose:
 		print(model.summary())
+		print(f'regularizer: {reg_weight}')
 
 	# compile and return model
 	return model
@@ -78,6 +79,8 @@ if __name__ == '__main__':
 	n_classes = 20
 	n_samples = 14363
 	split_idx = 11000
+	n_epochs = 25
+
 	local = False
 
 	parser = get_argparser()
@@ -124,7 +127,7 @@ if __name__ == '__main__':
 		steps_per_epoch=epoch_steps,
 				validation_steps=val_steps,
 		validation_data=data_generator(Xtest, ytest, batch_size), 
-		epochs=50)
+		epochs=n_epochs)
 
 	########################
 	# Save and evaluate model
@@ -143,5 +146,3 @@ if __name__ == '__main__':
 	ytrain_pred = model.predict(Xtrain)
 	train_accuracy = np.mean(np.argmax(ytrain_pred, axis=1) == np.argmax(ytrain, axis=1))
 	print(f"train accuracy is {train_accuracy}")
-
-	pdb.set_trace()

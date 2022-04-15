@@ -1,4 +1,5 @@
 import argparse
+import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 import pdb
@@ -38,6 +39,7 @@ def create_model(n_classes=10, n_units=16, n_layers=2, kernel=5, reg_weight=0.1)
 
 	if verbose:
 		print(model.summary())
+		print(f'regularizer: {reg_weight}')
 
 	# compile and return model
 	return model
@@ -85,8 +87,9 @@ if __name__ == '__main__':
 	
 	n_classes = 20
 	n_samples = 14363
-	split_idx = 11000
-	local = False
+	n_epochs = 25
+
+	data_amount = 'medium'
 
 	parser = get_argparser()
 	args = parser.parse_args()
@@ -99,34 +102,41 @@ if __name__ == '__main__':
 	kernel = args.cnn_kernel
 	regularizer = args.cnn_reg
 
-	model_name = f'CNN-layers{layers}-units{units}-kernel{kernel}-reg{regularizer}'
+	model_name = f'CNN-layers{layers}-units{units}-kernel{kernel}-reg{regularizer}-rgb'
 	model = create_model(n_classes=n_classes, n_units=units, n_layers=layers, kernel=kernel, reg_weight=regularizer)
 	
 	########################
 	# Load and process data
 	########################
-	Xrgb = np.load('Xrgb_filtered.npy')
-	yrgb = np.load('yrgb_filtered.npy')
+	Xrgb = np.load('Xrgb_top20.npy')
+	yrgb = np.load('y_top20.npy')
 
-	# Replace labels with 0-19
-	label_mapping = np.unique(yrgb).astype(int)
-	yrgb_20 = np.zeros_like(yrgb)
-	for i in range(len(label_mapping)):
-		old_label = label_mapping[i]
-		yrgb_20[np.where(yrgb == old_label)] = i
-
-	yrgb_cat = np_utils.to_categorical(yrgb_20)
+	yrgb_cat = np_utils.to_categorical(yrgb)
 	
-	if local:
-		Xtrain = Xrgb[0:500]
-		ytrain = yrgb_cat[0:500]
-		Xtest = Xrgb[1000:1100]
-		ytest = yrgb_cat[1000:1100]
-	else:
+	if data_amount == 'full':
+		split_idx = 11000
+		
 		Xtrain = Xrgb[:split_idx]
 		ytrain = yrgb_cat[:split_idx]
+		
 		Xtest = Xrgb[split_idx:]
 		ytest = yrgb_cat[split_idx:]
+
+	elif data_amount == 'medium':
+		
+		Xtrain = Xrgb[:7000]
+		ytrain = yrgb_cat[:7000]
+
+		Xtest = Xrgb[7000:10000]
+		ytest = yrgb_cat[7000:10000]
+
+	elif data_amount == 'small':
+		
+		Xtrain = Xrgb[0:500]
+		ytrain = yrgb_cat[0:500]
+		
+		Xtest = Xrgb[1000:1100]
+		ytest = yrgb_cat[1000:1100]
 
 	########################
 	# Train the model
@@ -140,7 +150,7 @@ if __name__ == '__main__':
 		steps_per_epoch=epoch_steps,
 				validation_steps=val_steps,
 		validation_data=data_generator(Xtest, ytest, batch_size), 
-		epochs=50)
+		epochs=n_epochs)
 
 	########################
 	# Save and evaluate model
@@ -159,3 +169,13 @@ if __name__ == '__main__':
 	ytrain_pred = model.predict(Xtrain)
 	train_accuracy = np.mean(np.argmax(ytrain_pred, axis=1) == np.argmax(ytrain, axis=1))
 	print(f"train accuracy is {train_accuracy}")
+
+	# pdb.set_trace()
+
+	fig, ax = plt.subplots(1, 1, figsize=(10, 8))
+	ax.hist(np.argmax(ypred, axis=1))
+	ax.set_xticks(np.arange(20))
+	ax.set_xticklabels(np.arange(20))
+
+	plt.savefig(f'{model_name}-hist.pdf')
+
