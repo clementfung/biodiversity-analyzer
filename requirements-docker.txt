@@ -1,0 +1,12 @@
+matplotlib
+jupyter==1.0.0
+keras==2.2.4
+pandas==1.0.1
+pandocfilters==1.4.2
+python-dateutil==2.8.1
+pytz==2020.1
+rasterio==1.2.10
+scikit-learn==0.22.2.post1
+scipy==1.4.1
+six==1.15.0
+tensorflow==1.14.0
