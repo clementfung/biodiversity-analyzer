@@ -2,13 +2,15 @@ import argparse
 import numpy as np
 import tensorflow as tf
 import pdb
+import os
 
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.layers import Input, Dense, Conv2D, BatchNormalization, MaxPool1D, Flatten
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras import regularizers
 from tensorflow.keras import optimizers
-from keras.utils import np_utils
+from tensorflow.keras.utils import to_categorical
+#from keras.utils.np_utils import to_categorical
 
 def create_model(n_classes=10, n_units=16, n_layers=2, kernel=5, reg_weight=0.1):
 	""" Creates Keras CNN model.   """
@@ -80,6 +82,11 @@ def get_argparser():
 		type=float,
 		help="Regularization weight of the CNN")
 
+	parser.add_argument("--gpus", 
+		default=-1,
+		type=int,
+		help="Which GPUs?")
+
 	return parser
 
 if __name__ == '__main__':
@@ -93,6 +100,9 @@ if __name__ == '__main__':
 
 	parser = get_argparser()
 	args = parser.parse_args()
+
+	os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpus)
+	os.environ["TF_CPP_MIN_LOG_LEVEL"] = '1'
 
 	########################
 	# Define CNN model
@@ -108,21 +118,24 @@ if __name__ == '__main__':
 	########################
 	# Load and process data
 	########################
-	Xrgb = np.load('Xir_top20.npy')
-	yrgb = np.load('y_top20.npy')
+	Xir = np.load('Xir_top20.npy')
+	yir = np.load('y_top20.npy')
 
-	yrgb_cat = np_utils.to_categorical(yrgb)
+	# Need to add the single-channel fourth dimension
+	Xir = np.expand_dims(Xir, axis=3)
+
+	yir_cat = to_categorical(yir)
 	
 	if local:
-		Xtrain = Xrgb[0:500]
-		ytrain = yrgb_cat[0:500]
-		Xtest = Xrgb[1000:1100]
-		ytest = yrgb_cat[1000:1100]
+		Xtrain = Xir[0:500]
+		ytrain = yir_cat[0:500]
+		Xtest = Xir[1000:1100]
+		ytest = yir_cat[1000:1100]
 	else:
-		Xtrain = Xrgb[:split_idx]
-		ytrain = yrgb_cat[:split_idx]
-		Xtest = Xrgb[split_idx:]
-		ytest = yrgb_cat[split_idx:]
+		Xtrain = Xir[:split_idx]
+		ytrain = yir_cat[:split_idx]
+		Xtest = Xir[split_idx:]
+		ytest = yir_cat[split_idx:]
 
 	########################
 	# Train the model

@@ -3,13 +3,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 import pdb
+import os
 
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.layers import Input, Dense, Conv2D, BatchNormalization, MaxPool1D, Flatten
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras import regularizers
 from tensorflow.keras import optimizers
-from keras.utils import np_utils
+from tensorflow.keras.utils import to_categorical
 
 def create_model(n_classes=10, n_units=16, n_layers=2, kernel=5, reg_weight=0.1):
 	""" Creates Keras CNN model.   """
@@ -81,6 +82,11 @@ def get_argparser():
 		type=float,
 		help="Regularization weight of the CNN")
 
+	parser.add_argument("--gpus", 
+		default=-1,
+		type=int,
+		help="Which GPUs?")
+
 	return parser
 
 if __name__ == '__main__':
@@ -93,6 +99,9 @@ if __name__ == '__main__':
 
 	parser = get_argparser()
 	args = parser.parse_args()
+
+	os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpus)
+	os.environ["TF_CPP_MIN_LOG_LEVEL"] = '1'
 
 	########################
 	# Define CNN model
@@ -111,7 +120,7 @@ if __name__ == '__main__':
 	Xrgb = np.load('Xrgb_top20.npy')
 	yrgb = np.load('y_top20.npy')
 
-	yrgb_cat = np_utils.to_categorical(yrgb)
+	yrgb_cat = to_categorical(yrgb)
 	
 	if data_amount == 'full':
 		split_idx = 11000
@@ -161,14 +170,14 @@ if __name__ == '__main__':
 	loss_obj = np.vstack([train_history.history['loss'], train_history.history['val_loss']])
 	np.savetxt(f'train-history-{model_name}.csv', loss_obj, delimiter=',', fmt='%.5f')
 
-	ypred = model.predict(Xtest)
+	ypred = model.predict(Xtest, batch_size=32)
 	test_accuracy = np.mean(np.argmax(ypred, axis=1) == np.argmax(ytest, axis=1))
 	print(f"test accuracy is {test_accuracy}")
 
-	# Sometimes train accuracy crashes OOM. Moved it to the end for now
-	ytrain_pred = model.predict(Xtrain)
-	train_accuracy = np.mean(np.argmax(ytrain_pred, axis=1) == np.argmax(ytrain, axis=1))
-	print(f"train accuracy is {train_accuracy}")
+	# # # Sometimes train accuracy crashes OOM. Moved it to the end for now
+	# ytrain_pred = model.predict(Xtrain, batch_size=32)
+	# train_accuracy = np.mean(np.argmax(ytrain_pred, axis=1) == np.argmax(ytrain, axis=1))
+	# print(f"train accuracy is {train_accuracy}")
 
 	# pdb.set_trace()
 
