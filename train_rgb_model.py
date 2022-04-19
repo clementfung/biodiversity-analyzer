@@ -91,8 +91,15 @@ def get_argparser():
 
 if __name__ == '__main__':
 	
-	n_classes = 20
-	n_samples = 14363
+	top10 = True
+	
+	if top10:
+		n_classes = 10
+		n_samples = 13240
+	else:
+		n_classes = 20
+		n_samples = 14363
+	
 	n_epochs = 25
 
 	data_amount = 'medium'
@@ -111,14 +118,18 @@ if __name__ == '__main__':
 	kernel = args.cnn_kernel
 	regularizer = args.cnn_reg
 
-	model_name = f'CNN-layers{layers}-units{units}-kernel{kernel}-reg{regularizer}-rgb'
+	model_name = f'CNN10-layers{layers}-units{units}-kernel{kernel}-reg{regularizer}-rgb'
 	model = create_model(n_classes=n_classes, n_units=units, n_layers=layers, kernel=kernel, reg_weight=regularizer)
 	
 	########################
 	# Load and process data
 	########################
-	Xrgb = np.load('Xrgb_top20.npy')
-	yrgb = np.load('y_top20.npy')
+	if top10:
+		Xrgb = np.load('Xrgb_top10.npy')
+		yrgb = np.load('y_top10.npy')
+	else:
+		Xrgb = np.load('Xrgb_top20.npy')
+		yrgb = np.load('y_top20.npy')
 
 	yrgb_cat = to_categorical(yrgb)
 	
@@ -164,27 +175,25 @@ if __name__ == '__main__':
 	########################
 	# Save and evaluate model
 	########################
-	model.save(model_name+'.h5')
-	print(f'Keras model saved to {model_name+".h5"}')
+	save = True
+	
+	if save:
 
-	loss_obj = np.vstack([train_history.history['loss'], train_history.history['val_loss']])
-	np.savetxt(f'train-history-{model_name}.csv', loss_obj, delimiter=',', fmt='%.5f')
+		model.save(model_name+'.h5')
+		print(f'Keras model saved to {model_name+".h5"}')
 
-	ypred = model.predict(Xtest, batch_size=32)
-	test_accuracy = np.mean(np.argmax(ypred, axis=1) == np.argmax(ytest, axis=1))
-	print(f"test accuracy is {test_accuracy}")
+		loss_obj = np.vstack([train_history.history['loss'], train_history.history['val_loss']])
+		np.savetxt(f'train-history-{model_name}.csv', loss_obj, delimiter=',', fmt='%.5f')
 
-	# # # Sometimes train accuracy crashes OOM. Moved it to the end for now
-	# ytrain_pred = model.predict(Xtrain, batch_size=32)
-	# train_accuracy = np.mean(np.argmax(ytrain_pred, axis=1) == np.argmax(ytrain, axis=1))
-	# print(f"train accuracy is {train_accuracy}")
+		fig, ax = plt.subplots(1, 1, figsize=(10, 8))
+		ax.hist(np.argmax(ypred, axis=1))
+		
+		if top10:
+			ax.set_xticks(np.arange(10))
+			ax.set_xticklabels(np.arange(10))
+		else:
+			ax.set_xticks(np.arange(20))
+			ax.set_xticklabels(np.arange(20))
 
-	# pdb.set_trace()
-
-	fig, ax = plt.subplots(1, 1, figsize=(10, 8))
-	ax.hist(np.argmax(ypred, axis=1))
-	ax.set_xticks(np.arange(20))
-	ax.set_xticklabels(np.arange(20))
-
-	plt.savefig(f'{model_name}-hist.pdf')
+		plt.savefig(f'{model_name}-hist.pdf')
 

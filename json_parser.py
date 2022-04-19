@@ -14,14 +14,14 @@ def count_categories(filename):
         this_category = x['annotations'][i]['category_id']
         counts[this_category] += 1
 
-    top_k = np.argsort(counts)[-20:]
+    top_k = np.argsort(counts)[-10:]
     total_sum = 0
 
     for i in top_k:
         print(f'Most common: {counts[i]} {x["categories"][i]["gbif_name"]}')
         total_sum += counts[i]
 
-    print(f'A total of {total_sum} records in top 20')
+    print(f'A total of {total_sum} records in top 10')
     return top_k
 
 def parse_annotations(filename, output_tag, filtering=False):
@@ -79,7 +79,7 @@ def parse_annotations(filename, output_tag, filtering=False):
     print(f'Final output length: {len(total_records)}')
 
     if filtering:
-        output_tag = f'{output_tag}_top20'
+        output_tag = f'{output_tag}_top10'
 
     # Save france files
     with open(f'{output_tag}_fr_parsed.json', "w") as output:

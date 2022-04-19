@@ -91,9 +91,17 @@ def get_argparser():
 
 if __name__ == '__main__':
 	
-	n_classes = 20
-	n_samples = 14363
-	split_idx = 11000
+	top10 = True
+
+	if top10:
+		n_classes = 10
+		n_samples = 13240
+		split_idx = 10000
+	else:
+		n_classes = 20
+		n_samples = 14363
+		split_idx = 11000
+	
 	n_epochs = 25
 
 	local = False
@@ -112,14 +120,18 @@ if __name__ == '__main__':
 	kernel = args.cnn_kernel
 	regularizer = args.cnn_reg
 
-	model_name = f'CNN-layers{layers}-units{units}-kernel{kernel}-reg{regularizer}-ir'
+	model_name = f'CNN10-layers{layers}-units{units}-kernel{kernel}-reg{regularizer}-ir'
 	model = create_model(n_classes=n_classes, n_units=units, n_layers=layers, kernel=kernel, reg_weight=regularizer)
 	
 	########################
 	# Load and process data
 	########################
-	Xir = np.load('Xir_top20.npy')
-	yir = np.load('y_top20.npy')
+	if top10:
+		Xir = np.load('Xir_top10.npy')
+		yir = np.load('y_top10.npy')
+	else:
+		Xir = np.load('Xir_top20.npy')
+		yir = np.load('y_top20.npy')
 
 	# Need to add the single-channel fourth dimension
 	Xir = np.expand_dims(Xir, axis=3)

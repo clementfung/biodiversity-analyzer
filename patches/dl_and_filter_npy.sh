@@ -31,7 +31,7 @@ for tid in ${tar_ids[@]}; do
 
   # TODO: parse and keep the altitude files too (probably easiest to just include them in the txt)
   for entry in */*/*.npy; do
-    if grep -q "$entry" ../annotations_train_top20_us_files.txt; then
+    if grep -q "$entry" ../annotations_train_top10_us_files.txt; then
       echo "keep $entry"
     else
       echo "delete $entry"

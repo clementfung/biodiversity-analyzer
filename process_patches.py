@@ -66,15 +66,34 @@ def process_demo():
 	np.save('Xaltitude.npy', altitude_input)
 	np.save('Xcover.npy', cover_input)
 
-def process_filtered_rgb():
+def count_eligible_files(dir_limit=20):
 
 	channel_file_index = 0
 
-	# Clement: For now, just doing 10 subdirectories each in the first 10 directories
-	n_files = 14363
-	rgb_channel_input = np.zeros((n_files, 256, 256, 3))
+	for value in range(dir_limit):
 
-	for value in range(20):
+		patches_dir = (value // 5 + 1)
+		filepath  = f'patches/patches_us_{int_to_id(patches_dir)}/{int_to_id(value)}'
+
+		datafiles = glob.glob(f'{filepath}/*/*.npy')
+
+		# Clement: slightly hacky indexing here, but assuming we trust the sorting alg, it looks like it all lines up.
+		for file in sorted(datafiles):
+
+			print(f'Processing {file}')
+			channel_file_index += 1
+
+	print(f'Processed {channel_file_index} RGB-IR files')
+	return channel_file_index
+
+def process_filtered_rgb(nfiles, dir_limit=20):
+
+	channel_file_index = 0
+
+	# Clement: Limit data to k subdirectories 
+	rgb_channel_input = np.zeros((nfiles, 256, 256, 3))
+
+	for value in range(dir_limit):
 
 		patches_dir = (value // 5 + 1)
 		filepath  = f'patches/patches_us_{int_to_id(patches_dir)}/{int_to_id(value)}'
@@ -91,20 +110,18 @@ def process_filtered_rgb():
 			channel_file_index += 1
 
 	print(f'Processed {channel_file_index} RGB-IR files')
-	np.save('Xrgb_top20.npy', rgb_channel_input)
+	np.save('Xrgb_top10.npy', rgb_channel_input)
 
-def process_filtered_ir_coverage():
+def process_filtered_ir_coverage(nfiles, dir_limit=20):
 
 	channel_file_index = 0
 
-	# Clement: For now, just doing 10 subdirectories each in the first 10 directories
-	n_files = 14363
-	
-	altitude_input = np.zeros((n_files, 256, 256))
-	ir_channel_input = np.zeros((n_files, 256, 256))
-	coverage_input = np.zeros((n_files, 256, 256))
+	# Clement: Limit data to k subdirectories 
+	altitude_input = np.zeros((nfiles, 256, 256))
+	ir_channel_input = np.zeros((nfiles, 256, 256))
+	coverage_input = np.zeros((nfiles, 256, 256))
 
-	for value in range(20):
+	for value in range(dir_limit):
 
 		patches_dir = (value // 5 + 1)
 		filepath  = f'patches/patches_us_{int_to_id(patches_dir)}/{int_to_id(value)}'
@@ -123,8 +140,8 @@ def process_filtered_ir_coverage():
 			channel_file_index += 1
 
 	print(f'Processed {channel_file_index} IR-coverage files')
-	np.save('Xir_top20.npy', ir_channel_input)
-	np.save('Xcoverage_top20.npy', summarize_coverage(coverage_input))
+	np.save('Xir_top10.npy', ir_channel_input)
+	np.save('Xcoverage_top10.npy', summarize_coverage(coverage_input))
 
 def summarize_coverage(coverage_input):
 
@@ -138,18 +155,18 @@ def summarize_coverage(coverage_input):
 
 	return coverage_out
 
-def process_filtered_labels():
+def process_filtered_labels(nfiles, dir_limit=20):
 
 	y_idx = 0
-	y_obj = np.zeros(14363)
+	y_obj = np.zeros(nfiles)
 	big_obj = dict()
 
-	with open(f'annotations_train_top20_us_parsed.json', "r") as f:
+	with open(f'annotations_train_top10_us_parsed.json', "r") as f:
 		
 		x = json.load(f)
 
 		for item in x:
-			if int(item["file_name"][:2]) < 20:
+			if int(item["file_name"][:2]) < dir_limit:
 				big_obj[item["file_name"]] = item["category"]
 
 	for key in sorted(big_obj.keys()):
@@ -160,18 +177,21 @@ def process_filtered_labels():
 
 	# Replace labels with 0-19
 	label_mapping = np.unique(y_obj).astype(int)
-	y_top20 = np.zeros_like(y_obj)
+	y_topk = np.zeros_like(y_obj)
 	for i in range(len(label_mapping)):
 		old_label = label_mapping[i]
-		y_top20[np.where(y_obj == old_label)] = i
+		y_topk[np.where(y_obj == old_label)] = i
 
-	np.save('y_top20.npy', y_top20)
+	np.save('y_top10.npy', y_topk)
 
 if __name__ == '__main__':
 
-	#process_filtered_rgb()
-	process_filtered_ir_coverage()
-	process_filtered_labels()
+	dir_limit = 30
+	n_files = count_eligible_files(dir_limit)
+
+	process_filtered_rgb(n_files, dir_limit)
+	process_filtered_ir_coverage(n_files, dir_limit)
+	process_filtered_labels(n_files, dir_limit)
 	
 	pdb.set_trace()
 
