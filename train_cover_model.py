@@ -111,7 +111,7 @@ if __name__ == '__main__':
 	Xrgb = np.load('Xcoverage_top20.npy')
 	yrgb = np.load('y_top20.npy')
 
-	yrgb_cat = np_utils.to_categorical(yrgb)
+	yrgb_cat = to_categorical(yrgb)
 
 	if local:
 		Xtrain = Xrgb[0:500]
