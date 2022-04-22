@@ -4,7 +4,7 @@ set -euxo pipefail
 
 layers=(1 2 3 4)
 units=(4 8 16 32)
-regs=('0.01' '0.05' '0.1' '0.5' '1')
+regs=('0.01' '0.05' '0.1')
 
 for ll in ${layers[@]}; do
 	for uu in ${units[@]}; do
