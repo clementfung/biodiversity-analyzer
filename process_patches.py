@@ -151,6 +151,7 @@ def summarize_coverage(coverage_input):
 
 	for i in range(n_files):
 		for j in range(num_coverage_categories):
+			# cindy: percentage of category j?
 			coverage_out[i, j] = np.mean(coverage_input[i] == j)
 
 	return coverage_out
@@ -175,6 +176,7 @@ def process_filtered_labels(nfiles, dir_limit=20):
 
 	print(f'Processed {y_idx} labels')
 
+	# cindy: why?
 	# Replace labels with 0-19
 	label_mapping = np.unique(y_obj).astype(int)
 	y_topk = np.zeros_like(y_obj)

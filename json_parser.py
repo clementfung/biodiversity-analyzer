@@ -50,6 +50,7 @@ def parse_annotations(filename, output_tag, filtering=False):
 
         category_id = x['annotations'][i]['category_id']
 
+        # cindy: top 10? 20?
         # Use only the top 20 categories
         if filtering and category_id not in top_k_categories:
             continue
@@ -58,6 +59,7 @@ def parse_annotations(filename, output_tag, filtering=False):
         for key in x['images'][i].keys():
 
             new_record[key] = x['images'][i][key]
+            # cindy: following line should be out of for loop?
             new_record['category'] = category_id
 
         country = x['images'][i]["country"]
