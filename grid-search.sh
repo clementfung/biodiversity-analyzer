@@ -10,9 +10,9 @@ for ll in ${layers[@]}; do
 	for uu in ${units[@]}; do
 		for rr in ${regs[@]}; do
 			
-			python3 train_alti_model.py --gpus 0 --cnn_layers $ll --cnn_units $uu --cnn_reg $rr
-			python3 train_ir_model.py --gpus 0 --cnn_layers $ll --cnn_units $uu --cnn_reg $rr
-			python3 train_rgb_model.py --gpus 0 --cnn_layers $ll --cnn_units $uu --cnn_reg $rr
+			python3 train_alti_model.py --gpus 0 --cnn_layers $ll --cnn_units $uu --cnn_reg $rr --n_epochs 100
+			python3 train_ir_model.py --gpus 0 --cnn_layers $ll --cnn_units $uu --cnn_reg $rr --n_epochs 100
+			python3 train_rgb_model.py --gpus 0 --cnn_layers $ll --cnn_units $uu --cnn_reg $rr --n_epochs 100
 			# python3 train_cover_model.py --dnn_layers $ll --dnn_units $uu --dnn_reg $rr
 
 		done
