@@ -40,7 +40,6 @@ def get_argparser():
 
 if __name__ == '__main__':
 	
-	n_classes = 20
 	n_samples = 14363
 	split_idx = 11000
 
@@ -52,8 +51,8 @@ if __name__ == '__main__':
 	# Load and process data
 	########################
 	
-	Xrgb = np.load(f'X{data_type}_top20.npy')
-	yrgb = np.load('y_top20.npy')
+	Xrgb = np.load(f'X{data_type}_top10.npy')
+	yrgb = np.load('y_top10.npy')
 	yrgb_cat = to_categorical(yrgb)
 
 	if data_type == 'ir':
@@ -67,8 +66,8 @@ if __name__ == '__main__':
 	train_results = np.zeros((4, 4, 3))
 	test_results = np.zeros((4, 4, 3))
 
-	units_arr = [4, 8, 16, 32]
 	layers_arr = [1, 2, 3, 4]
+	units_arr = [4, 8, 16, 32]
 	reg_arr = [0.05, 0.1, 0.5]
 
 	for layers_idx in range(4):
@@ -82,7 +81,7 @@ if __name__ == '__main__':
 				if data_type == 'cover':
 					model_name = f'DNN-layers{layers}-units{units}-reg{reg}-{data_type}'
 				else:
-					model_name = f'CNN-layers{layers}-units{units}-kernel5-reg{reg}-{data_type}'
+					model_name = f'CNN10-layers{layers}-units{units}-kernel5-reg{reg}-{data_type}'
 				
 				model = load_model(f'{model_name}.h5')
 
@@ -104,5 +103,5 @@ if __name__ == '__main__':
 				train_results[layers_idx, units_idx, reg_idx] = train_accuracy
 				test_results[layers_idx, units_idx, reg_idx] = test_accuracy
 
-	np.save(f'train-accuracy-{data_type}.npy', train_results)
-	np.save(f'test-accuracy-{data_type}.npy', test_results)
+	np.save(f'CNN10-train-accuracy-{data_type}.npy', train_results)
+	np.save(f'CNN10-test-accuracy-{data_type}.npy', test_results)

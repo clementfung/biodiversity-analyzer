@@ -29,7 +29,7 @@ for tid in ${tar_ids[@]}; do
   search_dir="./patches_$country"_"$tid"
   cd "$search_dir"
 
-  # TODO: parse and keep the altitude files too (probably easiest to just include them in the txt)
+  # Parse and keep both RGB and altitude files
   for entry in */*/*.npy; do
     if grep -q "$entry" ../annotations_train_top10_us_files.txt; then
       echo "keep $entry"

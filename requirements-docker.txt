@@ -9,4 +9,3 @@ rasterio==1.2.10
 scikit-learn==0.22.2.post1
 scipy==1.4.1
 six==1.15.0
-tensorflow==1.14.0

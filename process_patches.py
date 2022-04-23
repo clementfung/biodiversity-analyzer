@@ -80,6 +80,9 @@ def count_eligible_files(dir_limit=20):
 		# Clement: slightly hacky indexing here, but assuming we trust the sorting alg, it looks like it all lines up.
 		for file in sorted(datafiles):
 
+			if file[-8:] == 'alti.npy':
+				continue
+
 			print(f'Processing {file}')
 			channel_file_index += 1
 
@@ -102,6 +105,9 @@ def process_filtered_rgb(nfiles, dir_limit=20):
 
 		# Clement: slightly hacky indexing here, but assuming we trust the sorting alg, it looks like it all lines up.
 		for file in sorted(datafiles):
+
+			if file[-8:] == 'alti.npy':
+				continue
 
 			print(f'Processing {file}')
 
@@ -131,6 +137,9 @@ def process_filtered_ir_coverage(nfiles, dir_limit=20):
 		# Clement: slightly hacky indexing here, but assuming we trust the sorting alg, it looks like it all lines up.
 		for file in sorted(datafiles):
 
+			if file[-8:] == 'alti.npy':
+				continue
+
 			print(f'Processing {file}')
 
 			area_data = np.load(file)
@@ -142,6 +151,34 @@ def process_filtered_ir_coverage(nfiles, dir_limit=20):
 	print(f'Processed {channel_file_index} IR-coverage files')
 	np.save('Xir_top10.npy', ir_channel_input)
 	np.save('Xcoverage_top10.npy', summarize_coverage(coverage_input))
+
+def process_filtered_alti_coverage(nfiles, dir_limit=20):
+
+	alti_file_index = 0
+
+	# Clement: Limit data to k subdirectories 
+	altitude_input = np.zeros((nfiles, 256, 256))
+
+	for value in range(dir_limit):
+
+		patches_dir = (value // 5 + 1)
+		filepath  = f'patches/patches_us_{int_to_id(patches_dir)}/{int_to_id(value)}'
+
+		datafiles = glob.glob(f'{filepath}/*/*.npy')
+
+		# Clement: slightly hacky indexing here, but assuming we trust the sorting alg, it looks like it all lines up.
+		for file in sorted(datafiles):
+
+			if file[-8:] == 'alti.npy':
+					
+				print(f'Processing {file}')
+
+				# Clement: Add any scaling here?
+				altitude_input[alti_file_index] = np.load(file)
+				alti_file_index += 1
+
+	print(f'Processed {alti_file_index} altitude files')
+	np.save('Xalti_top10.npy', altitude_input)
 
 def summarize_coverage(coverage_input):
 
@@ -191,6 +228,7 @@ if __name__ == '__main__':
 	dir_limit = 30
 	n_files = count_eligible_files(dir_limit)
 
+	process_filtered_alti_coverage(n_files, dir_limit)
 	process_filtered_rgb(n_files, dir_limit)
 	process_filtered_ir_coverage(n_files, dir_limit)
 	process_filtered_labels(n_files, dir_limit)
