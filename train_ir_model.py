@@ -185,7 +185,7 @@ if __name__ == '__main__':
 	model.save(model_name+'.h5')
 	print(f'Keras model saved to {model_name+".h5"}')
 
-	loss_obj = np.vstack([train_history.history['loss'], train_history.history['val_loss']])
+	loss_obj = np.vstack([train_history.history['loss'], train_history.history['val_loss'], train_history.history['acc'], train_history.history['val_acc']])
 	np.savetxt(f'train-history-{model_name}.csv', loss_obj, delimiter=',', fmt='%.5f')
 
 	ypred_val = model.predict(Xval)
