@@ -132,37 +132,41 @@ if __name__ == '__main__':
 
 	n_epochs = args.n_epochs
 
-	model_name = f'CNN10-layers{layers}-units{units}-kernel{kernel}-reg{regularizer}-ir'
+	model_name = f'CNN10-layers{layers}-units{units}-kernel{kernel}-reg{regularizer}-alti'
 	model = create_model(n_classes=n_classes, n_units=units, n_layers=layers, kernel=kernel, reg_weight=regularizer)
 	
 	########################
 	# Load and process data
 	########################
 	if top10:
-		Xir = np.load('Xir_top10.npy')
-		yir = np.load('y_top10.npy')
+		Xalti = np.load('Xalti_top10.npy')
+		yalti = np.load('y_top10.npy')
 	else:
-		Xir = np.load('Xir_top20.npy')
-		yir = np.load('y_top20.npy')
+		Xalti = np.load('Xalti_top20.npy')
+		yalti = np.load('y_top20.npy')
 
 	# Need to add the single-channel fourth dimension
-	Xir = np.expand_dims(Xir, axis=3)
-	yir_cat = to_categorical(yir)
+	Xalti = np.expand_dims(Xalti, axis=3)
+	yalti_cat = to_categorical(yalti)
+
+	# Add scaling on Xalti: scale to 0-1 range.
+	Xalti = Xalti + np.abs(np.min(Xalti))
+	Xalti = Xalti / np.abs(np.max(Xalti))
 
 	if local:
-		Xtrain = Xir[0:500]
-		ytrain = yir_cat[0:500]
-		Xtest = Xir[1000:1100]
-		ytest = yir_cat[1000:1100]
+		Xtrain = Xalti[0:500]
+		ytrain = yalti_cat[0:500]
+		Xtest = Xalti[1000:1100]
+		ytest = yalti_cat[1000:1100]
 	else:
 
 		# Performs a 60/20/20 split
-		Xtrain1, Xtest, ytrain1, ytest = train_test_split(Xir, yir_cat, test_size=0.2, random_state=42)
+		Xtrain1, Xtest, ytrain1, ytest = train_test_split(Xalti, yalti_cat, test_size=0.2, random_state=42)
 		Xtrain, Xval, ytrain, yval = train_test_split(Xtrain1, ytrain1, test_size=0.25, random_state=42)
-		Xtrain = Xir[:split_idx]
-		ytrain = yir_cat[:split_idx]
-		Xtest = Xir[split_idx:]
-		ytest = yir_cat[split_idx:]
+		Xtrain = Xalti[:split_idx]
+		ytrain = yalti_cat[:split_idx]
+		Xtest = Xalti[split_idx:]
+		ytest = yalti_cat[split_idx:]
 
 	########################
 	# Train the model

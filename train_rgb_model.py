@@ -34,6 +34,8 @@ def create_model(n_classes=10, n_units=16, n_layers=2, kernel=5, reg_weight=0.1)
 		cnn_layer = BatchNormalization()(cnn_layer)
 
 	flatten = Flatten()(cnn_layer)
+	dense_out = Dense(100, kernel_regularizer=regularizers.l2(reg_weight))(flatten)
+	dense_out= LeakyReLU(alpha=0.2)(dense_out)
 	dense_out = Dense(n_classes, activation='softmax', kernel_regularizer=regularizers.l2(reg_weight))(flatten)
 	
 	# Define the total model
@@ -150,8 +152,9 @@ if __name__ == '__main__':
 
 	else:
 
+		# Performs a 60/20/20 split
 		Xtrain1, Xtest, ytrain1, ytest = train_test_split(Xrgb, yrgb_cat, test_size=0.2, random_state=42)
-		Xtrain, Xval, ytrain, yval = train_test_split(Xtrain1, ytrain1, test_size=0.2, random_state=42)
+		Xtrain, Xval, ytrain, yval = train_test_split(Xtrain1, ytrain1, test_size=0.25, random_state=42)
 
 	########################
 	# Train the model

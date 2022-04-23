@@ -24,13 +24,15 @@ def count_categories(filename):
     print(f'A total of {total_sum} records in top 10')
     return top_k
 
-def parse_annotations(filename, output_tag, filtering=False):
+def parse_annotations(filename, output_tag, filtering=False, save_txt=True):
 
     total_records_fr = []
     total_filenames_fr = []
+    total_filenames_alti_fr = []
 
     total_records_us = []
     total_filenames_us = []
+    total_filenames_alti_us = []
 
     with open(filename, "r") as f:
         x = json.load(f)
@@ -64,9 +66,11 @@ def parse_annotations(filename, output_tag, filtering=False):
 
         if country == "fr":
             total_filenames_fr.append(x['images'][i]['file_name'])
+            total_filenames_alti_fr.append(x['images'][i]['file_name_alti'])
             total_records_fr.append(new_record)
         elif country == "us":
             total_filenames_us.append(x['images'][i]['file_name'])
+            total_filenames_alti_us.append(x['images'][i]['file_name_alti'])
             total_records_us.append(new_record)
         else:
             print(f'Unknown country: {country}')
@@ -78,32 +82,61 @@ def parse_annotations(filename, output_tag, filtering=False):
     print(f'Final output length (us): {len(total_records_us)}')
     print(f'Final output length: {len(total_records)}')
 
-    if filtering:
-        output_tag = f'{output_tag}_top10'
+    if save_txt:
 
-    # Save france files
-    with open(f'{output_tag}_fr_parsed.json', "w") as output:
-        json.dump(total_records_fr, output)
+        if filtering:
+            output_tag = f'{output_tag}_top10'
 
-    with open(f'{output_tag}_fr_files.txt', "w") as output:
-        for file in sorted(total_filenames_fr):
-            output.write(f'{file}\n')
+        #####################
+        # Save france files
+        #####################
+        with open(f'{output_tag}_fr_parsed.json', "w") as output:
+            json.dump(total_records_fr, output)
 
-    # Save US files
-    with open(f'{output_tag}_us_parsed.json', "w") as output:
-        json.dump(total_records_us, output)
+        with open(f'{output_tag}_fr_files_rgb.txt', "w") as output:
+            for file in sorted(total_filenames_fr):
+                output.write(f'{file}\n')
 
-    with open(f'{output_tag}_us_files.txt', "w") as output:
-        for file in sorted(total_filenames_us):
-            output.write(f'{file}\n')
+        with open(f'{output_tag}_fr_files_alti.txt', "w") as output:
+            for file in sorted(total_filenames_alti_fr):
+                output.write(f'{file}\n')
 
-    # Save total files
-    with open(f'{output_tag}_parsed.json', "w") as output:
-        json.dump(total_records, output)
+        # Write both to same file
+        with open(f'{output_tag}_fr_files.txt', "w") as output:
+            for file in sorted(total_filenames_fr):
+                output.write(f'{file}\n')
 
-    with open(f'{output_tag}_files.txt', "w") as output:
-        for file in sorted(total_filenames):
-            output.write(f'{file}\n')
+            for file in sorted(total_filenames_alti_fr):
+                output.write(f'{file}\n')
+
+        #####################
+        # Save USA files
+        #####################
+        with open(f'{output_tag}_us_parsed.json', "w") as output:
+            json.dump(total_records_us, output)
+
+        with open(f'{output_tag}_us_files_rgb.txt', "w") as output:
+            for file in sorted(total_filenames_us):
+                output.write(f'{file}\n')
+
+        with open(f'{output_tag}_us_files_alti.txt', "w") as output:
+            for file in sorted(total_filenames_alti_us):
+                output.write(f'{file}\n')
+
+        with open(f'{output_tag}_us_files.txt', "w") as output:
+            for file in sorted(total_filenames_us):
+                output.write(f'{file}\n')
+
+            for file in sorted(total_filenames_alti_us):
+                output.write(f'{file}\n')
+
+        # Save total files
+        with open(f'{output_tag}_parsed.json', "w") as output:
+            json.dump(total_records, output)
+
+        with open(f'{output_tag}_files.txt', "w") as output:
+            for file in sorted(total_filenames):
+                output.write(f'{file}\n')
 
 if __name__ == '__main__':
     
