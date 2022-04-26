@@ -12,6 +12,7 @@ from tensorflow.keras import optimizers
 from tensorflow.keras.utils import to_categorical
 
 from tensorflow.keras.models import load_model
+from sklearn.model_selection import train_test_split
 
 def get_argparser():
 	
@@ -39,13 +40,12 @@ def get_argparser():
 	return parser
 
 if __name__ == '__main__':
-	
-	n_samples = 14363
-	split_idx = 11000
 
 	parser = get_argparser()
 	args = parser.parse_args()
 	data_type = args.data_type
+
+	os.environ["CUDA_VISIBLE_DEVICES"] = '-1'
 
 	########################
 	# Load and process data
@@ -55,27 +55,26 @@ if __name__ == '__main__':
 	yrgb = np.load('y_top10.npy')
 	yrgb_cat = to_categorical(yrgb)
 
-	if data_type == 'ir':
+	if data_type == 'ir' or data_type == 'alti':
 		Xrgb = np.expand_dims(Xrgb, axis=3)
 
-	Xtrain = Xrgb[:split_idx]
-	ytrain = yrgb_cat[:split_idx]
-	Xtest = Xrgb[split_idx:]
-	ytest = yrgb_cat[split_idx:]
+	# Performs a 60/20/20 split
+	Xtrain1, Xtest, ytrain1, ytest = train_test_split(Xrgb, yrgb_cat, test_size=0.2, random_state=42)
+	Xtrain, Xval, ytrain, yval = train_test_split(Xtrain1, ytrain1, test_size=0.25, random_state=42)
 
 	train_results = np.zeros((4, 4, 3))
 	test_results = np.zeros((4, 4, 3))
 
 	layers_arr = [1, 2, 3, 4]
 	units_arr = [4, 8, 16, 32]
-	reg_arr = [0.05, 0.1, 0.5]
+	reg_arr = [0.01, 0.05, 0.1]
 
-	for layers_idx in range(4):
-		for units_idx in range(4):
-			for reg_idx in range(3):
+	for layers_idx in range(len(layers_arr)):
+		for units_idx in range(len(units_arr)):
+			for reg_idx in range(len(reg_arr)):
 
-				units = units_arr[units_idx]
 				layers = layers_arr[layers_idx]
+				units = units_arr[units_idx]
 				reg = reg_arr[reg_idx]
 
 				if data_type == 'cover':

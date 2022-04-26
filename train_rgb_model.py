@@ -147,8 +147,11 @@ if __name__ == '__main__':
 		Xtrain = Xrgb[0:500]
 		ytrain = yrgb_cat[0:500]
 		
-		Xtest = Xrgb[1000:1100]
-		ytest = yrgb_cat[1000:1100]
+		Xval = Xrgb[1000:1100]
+		yval = yrgb_cat[1000:1100]
+
+		Xtest = Xrgb[2000:2100]
+		ytest = yrgb_cat[2000:2100]
 
 	else:
 
@@ -178,7 +181,7 @@ if __name__ == '__main__':
 	
 	if save:
 
-		model.save(model_name+'.h5')
+		model.save(f'{model_name}.h5')
 		print(f'Keras model saved to {model_name+".h5"}')
 
 		loss_obj = np.vstack([train_history.history['loss'], train_history.history['val_loss'], train_history.history['acc'], train_history.history['val_acc']])
