@@ -4,11 +4,9 @@ import cvxpy as cp
 import random
 import csv
 
+# ---------------------------------------------------------------------------------------------------------------
+# branch and bound algorithm adopted from 15780 course work
 from heapq import heappush, heappop
-
-'''
-You can use the following classes in your algorithm (although you are not required to).
-'''
 
 class PQNode:
     '''
@@ -21,7 +19,6 @@ class PQNode:
 
     def __gt__(self, other_node):
         return self.prob_value > other_node.prob_value
-
 
 class PriorityQueue:
     def __init__(self):
@@ -73,8 +70,6 @@ def branch_and_bound(var1, var2, var3, objective, constraints, l1, l2):
             return cur_node.prob_value, cur_node.var_value
         lower = int(non_int_val) if non_int_val > 0 else (int(non_int_val) - 1)
         upper = lower + 1
-        # l1 = len(var1.value[0])
-        # l2 = len(var2.value[0])
         if non_int_index < l1:
             new_constraints_1 = cur_node.constraints + [var1[0][non_int_index] <= lower]
         elif non_int_index < l1 + l2:
@@ -84,7 +79,6 @@ def branch_and_bound(var1, var2, var3, objective, constraints, l1, l2):
         new_node_1 = solve_relaxation(var1, var2, var3, objective, constraints, new_constraints_1)
         if not (new_node_1.var_value is None):
             pq.push(new_node_1, new_node_1.prob_value)
-
         if non_int_index < l1:
             new_constraints_2 = cur_node.constraints + [var1[0][non_int_index] >= upper]
         elif non_int_index < l1 + l2:
@@ -95,7 +89,7 @@ def branch_and_bound(var1, var2, var3, objective, constraints, l1, l2):
         if not (new_node_2.var_value is None):
             pq.push(new_node_2, new_node_2.prob_value)
     return None
-
+#----------------------------------------------------------------------------------------------------------------
 
 # contruct a matrix like:
 # 1 0 0
@@ -157,7 +151,6 @@ def solve_lp(num_images, num_categories, budget, num_of_each_species, matrix, co
 
     # objective
     c_categories = np.ones(num_categories)
-    # objective = cp.Maximize(cp.sum(alloc_all @ B))
     objective = cp.Maximize(cp.sum(alloc_categories))
 
     # budget constraint
@@ -165,129 +158,102 @@ def solve_lp(num_images, num_categories, budget, num_of_each_species, matrix, co
     # problem.solve(solver='ECOS')
     problem.solve(solver='GLPK_MI')
 
-    # pv, vv = branch_and_bound(alloc_images, alloc_categories, alloc_all, objective, constraints, num_images, num_categories)
-    # return pv, vv
-
     return problem.value, alloc_all.value, alloc_images.value
+    # prob_value, var_value = branch_and_bound(alloc_images, alloc_categories, alloc_all, objective, constraints, num_images, num_categories)
+    # return prob_value, var_value
 
 
+# check if budget can cover at least one location
+def check_budget(costs, budget):
+    for cost in costs:
+        if budget >= cost:
+            return True
+    return False
+
+
+# randomly select locations to preserve
+def random_baseline(matrix, costs, num_images, num_categories, budget, num_of_each_species):
+    indices = list(range(num_images))
+    # print(indices)
+    result = np.zeros(num_categories)
+
+    while check_budget(costs, budget):
+        selected_idx = random.sample(indices, k=1)[0]
+        # print(selected_idx)
+        budget -= costs[selected_idx]
+        indices.remove(selected_idx)
+        # print(indices)
+        result += matrix[selected_idx]
+
+    # print(result)
+    for i in range(num_categories):
+        result[i] = 1 if result[i] >= num_of_each_species else 0
+
+    return np.sum(result)
+
+
+def greedy_baseline(matrix, costs, num_images, num_categories, budget, num_of_each_species):
+    sums = np.sum(matrix, axis = 0)
+    max_species = np.argmax(sums)
+    
+    result = np.zeros(num_categories)
+    i = 0
+    while budget > 0:
+        max_probs = matrix[:, max_species]
+        img_argmax = np.argmax(max_probs)
+        result += matrix[img_argmax]
+        budget -= costs[img_argmax]
+        matrix = np.delete(matrix, img_argmax, 0)
+        costs = np.delete(costs, img_argmax)
+
+    print(result)
+    for i in range(num_categories):
+        result[i] = 1 if result[i] >= num_of_each_species else 0
+
+    return np.sum(result)
+
+
+# input: csv file, n = # of lines to process
+# output: np array
+def process_csv(filename, n):
+    result = []
+    with open(filename) as file:
+        reader = csv.reader(file)
+        counter = 0
+        for row in reader:
+            if counter > n:
+                break
+            result.append(row)
+            counter += 1
+    file.close()
+    result = np.array(result, dtype=float)
+    return result
+
+def uniform_costs(n):
+    costs = np.ones(n, dtype=float)
+    return costs
 
 if __name__ == '__main__':
-    # filename = sys.argv[1]
-    # budget = sys.argv[2]
-    # num_images = 10
-    # num_categories = 4
-    # budget = 4
-    # num_of_each_species = 2
-    # matrix = np.zeros((num_images, num_categories))
-    # for i in range(0, 2):
-    #     matrix[i][0] = 0.25
-    #     matrix[i][1] = 0.25
-    #     matrix[i][2] = 0.25
-    #     matrix[i][3] = 0.25
-    # for i in range(2, 5):
-    #     matrix[i][0] = 0.5
-    #     matrix[i][1] = 0.5
-    # for i in range(5, 10):
-    #     matrix[i][2] = 0.5
-    #     matrix[i][3] = 0.5
-
-    # print(matrix)
-
-    # prob_val, alloc_val, alloc_img_val = solve_lp(num_images, num_categories, budget, num_of_each_species, matrix)
-    # print(prob_val)
-    # print(alloc_val)
-    # print(alloc_img_val)
-
-    # num_images = 50
-    # num_categories = 10
-    # budget = 10
-    # num_of_each_species = 1
-    # matrix = np.zeros((num_images, num_categories))
-    # for i in range(0, num_images):
-    #     random_sample = np.zeros(num_categories)
-    #     for j in range(num_categories):
-    #         random_sample[j] = random.random()
-    #     random_sample = random_sample / np.sum(random_sample)
-    #     # print(np.sum(random_sample))
-    #     matrix[i] = random_sample
-
-    # # print(matrix)
-
-    # prob_val, alloc_val, alloc_img_val = solve_lp(num_images, num_categories, budget, num_of_each_species, matrix)
-    # # pv, vv = solve_lp(num_images, num_categories, budget, num_of_each_species, matrix)
-    # # print(pv)
-    # # print(vv[:50])
-
-    # print(prob_val)
-    # # print(alloc_val)
-    # print(alloc_img_val)
     num_images = 15
-    matrix = []
-    with open('sample_predictions.csv') as file:
-        reader = csv.reader(file)
-        count = 0
-        for row in reader:
-            if count > num_images:
-                break
-            matrix.append(row)
-            count += 1
-    file.close()
-    matrix = np.array(matrix, dtype=float)
-    
-    
     num_categories = 10
     budget = 5
     num_of_each_species = 1
-    costs = np.zeros(num_images)
-    # for i in range(int(num_images/2)):
+    matrix = process_csv('sample_predictions.csv', num_images)
+
+    # costs = np.zeros(num_images)
+    # for i in range(num_images):
     #     costs[i] = 1.0
-    # for i in range(int(num_images/2), num_images):
-    #     costs[i] = 0.5
-    for i in range(num_images):
-        costs[i] = 1.0
+    costs = uniform_costs(num_images)
 
     prob_val, alloc_val, alloc_img_val = solve_lp(num_images, num_categories, budget, num_of_each_species, matrix, costs)
     # print(prob_val)
     # print(alloc_img_val)
     print("lp result = {}".format(prob_val))
 
-    # random selection of budget number of images
-    indices = random.sample(list(range(num_images)), k=budget)
-    print(indices)
-    res = np.zeros(num_categories)
-    for i in indices:
-        # for j in range(num_categories):
-        #     res[j] = matrix[i][j]
-        res = res + matrix[i]
-    print(res)
+    # random baseline
+    random_res = random_baseline(matrix, costs, num_images, num_categories, budget, num_of_each_species)
+    print("random selection result = {}".format(random_res))
 
-    for j in range(num_categories):
-        if res[j] >= num_of_each_species:
-            res[j] = 1
-        else:
-            res[j] = 0
-
-    print("random selection result = {}".format(np.sum(res)))
-
-    # greedy 
-    sums = np.sum(matrix, axis = 0)
-    argmax = np.argmax(sums)
-    
-    res = np.zeros(num_categories)
-    for i in range(budget):
-        max_probs = matrix[:, argmax]
-        img_argmax = np.argmax(max_probs)
-        res = res + matrix[img_argmax]
-        matrix = np.delete(matrix, img_argmax, 0)
-
-    print(res)
-
-    for j in range(num_categories):
-        if res[j] >= num_of_each_species:
-            res[j] = 1
-        else:
-            res[j] = 0
-
-    print("greedy selection result = {}".format(np.sum(res)))
-
+    # greedy baseline
+    greedy_result = greedy_baseline(np.copy(matrix), costs, num_images, num_categories, budget, num_of_each_species)
+    print("new greedy selection result = {}".format(greedy_result))
