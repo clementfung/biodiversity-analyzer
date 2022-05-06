@@ -35,7 +35,7 @@ def get_argparser():
 	parser.add_argument("--data_type", 
 		default='rgb',
 		type=str,
-		help="Which data to evaluate on: (ir, rgb, cover)")
+		help="Which data to evaluate on: (ir, rgb, cover, alti)")
 
 	return parser
 

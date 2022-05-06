@@ -50,8 +50,8 @@ if __name__ == '__main__':
 	########################
 
 	layers_arr = [1, 2, 3, 4]
-	units_arr = [4, 8, 16, 32]
-	reg_arr = [0.05]
+	units_arr = [4, 8, 16, 32, 64]
+	reg_arr = [0.001, 0.005, 0.01, 0.05, 0.1]
 
 	plot_obj = np.zeros((len(layers_arr), len(units_arr), len(reg_arr)))
 
@@ -65,11 +65,14 @@ if __name__ == '__main__':
 				kernel = 5
 
 				model_name = f'CNN10-layers{layers}-units{units}-kernel{kernel}-reg{regularizer}-{data_type}'
-				loss_obj = np.loadtxt(f'train-history-{model_name}.csv', delimiter=',')
+				loss_obj = np.loadtxt(f'output-data/train-history-{model_name}.csv', delimiter=',')
 
 				print(f'For model {model_name} Best val accuracy is {np.max(loss_obj[3])}')
 
 				plot_obj[layers_idx, units_idx, reg_idx] = np.max(loss_obj[3])
+
+	# Pick one regularization
+	cut_plot_obj = plot_obj[:, :, 2]
 
 	fig, ax = plt.subplots(1, 1, figsize=(10, 6))
 
@@ -78,10 +81,11 @@ if __name__ == '__main__':
 
 	ax.set_title('Hyperparameter Search for IR models', fontsize=24)
 	ax.set_ylim([0, 0.5])
-	ax.bar(np.arange(n_col) - 3/2 * width, plot_obj[:, 0, 0], width, label='4 units/layer')
-	ax.bar(np.arange(n_col) - 1/2 * width, plot_obj[:, 1, 0], width, label='8 units/layer')
-	ax.bar(np.arange(n_col) + 1/2 * width, plot_obj[:, 2, 0], width, label='16 units/layer')
-	ax.bar(np.arange(n_col) + 3/2 * width, plot_obj[:, 3, 0], width, label='32 units/layer')
+	ax.bar(np.arange(n_col) - 2 * width, cut_plot_obj[:, 0], width, label='4 units/layer')
+	ax.bar(np.arange(n_col) - 1 * width, cut_plot_obj[:, 1], width, label='8 units/layer')
+	ax.bar(np.arange(n_col) + 0 * width, cut_plot_obj[:, 2], width, label='16 units/layer')
+	ax.bar(np.arange(n_col) + 1 * width, cut_plot_obj[:, 3], width, label='32 units/layer')
+	ax.bar(np.arange(n_col) + 2 * width, cut_plot_obj[:, 4], width, label='64 units/layer')
 
 	ax.set_axisbelow(True)
 	ax.grid(True, which='major', axis='y', linestyle = '--')

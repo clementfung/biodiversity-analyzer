@@ -5,7 +5,7 @@ import pdb
 import os
 
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
-from tensorflow.keras.layers import Input, Dense, Conv2D, BatchNormalization, MaxPool1D, Flatten
+from tensorflow.keras.layers import Input, Dense, Conv2D, BatchNormalization, LeakyReLU, Flatten
 from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras import regularizers
 from tensorflow.keras import optimizers
@@ -18,16 +18,20 @@ def create_model(n_classes=10, n_units=16, n_layers=2, reg_weight=0.1):
 	activation = 'relu'
 	verbose = True
 
-	input_shape = (34)
+	input_shape = (17)
 
-	input_layer = Input(shape=input_shape)
+	input_layer = Input(shape=input_shape)	
 	dnn_layer = Dense(n_units, kernel_regularizer=regularizers.l2(reg_weight))(input_layer)
+	dnn_layer = LeakyReLU(alpha=0.2)(dnn_layer)
 
 	for _ in range(n_layers - 1):
 		dnn_layer = Dense(n_units, kernel_regularizer=regularizers.l2(reg_weight))(dnn_layer)
+		dnn_layer = LeakyReLU(alpha=0.2)(dnn_layer)
 
 	flatten = Flatten()(dnn_layer)
-	dense_out = Dense(n_classes, activation='softmax', kernel_regularizer=regularizers.l2(reg_weight))(flatten)
+	dense_out = Dense(100, kernel_regularizer=regularizers.l2(reg_weight))(flatten)
+	dense_out = LeakyReLU(alpha=0.2)(dense_out)
+	dense_out = Dense(n_classes, activation='softmax', kernel_regularizer=regularizers.l2(reg_weight))(dense_out)
 	
 	# Define the total model
 	model = Model(input_layer, dense_out)
@@ -82,7 +86,7 @@ def get_argparser():
 
 if __name__ == '__main__':
 	
-	n_classes = 20
+	n_classes = 10
 	n_samples = 14363
 	split_idx = 11000
 	n_epochs = 25
@@ -108,10 +112,11 @@ if __name__ == '__main__':
 	########################
 	# Load and process data
 	########################
-	Xrgb = np.load('Xcoverage_top20.npy')
-	yrgb = np.load('y_top20.npy')
-
+	Xrgb = np.load('Xcoverage_top10.npy')
+	yrgb = np.load('y_top10.npy')
 	yrgb_cat = to_categorical(yrgb)
+
+	Xrgb = Xrgb[:, 17:]
 
 	if local:
 		Xtrain = Xrgb[0:500]
