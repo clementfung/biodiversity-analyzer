@@ -128,7 +128,7 @@ def construct_B(num_images, num_categories, matrix):
             B[i][j] = matrix[i//num_categories][j]
     return B
 
-def solve_lp(num_images, num_categories, budget, num_of_each_species, matrix):
+def solve_lp(num_images, num_categories, budget, num_of_each_species, matrix, costs):
     alloc_all = cp.Variable((1, num_images * num_categories), integer = True)
     alloc_images = cp.Variable((1, num_images), integer = True)
     alloc_categories = cp.Variable((1, num_categories), integer = True)
@@ -139,7 +139,7 @@ def solve_lp(num_images, num_categories, budget, num_of_each_species, matrix):
     # constraints
     constraints = []
     c_image = np.ones(num_images)
-    constraints.append(alloc_images @ c_image.T <= budget)
+    constraints.append(alloc_images @ costs.T <= budget)
 
     A = construct_A(num_images, num_categories)
     constraints.append(alloc_all @ A <= alloc_images * num_categories)
@@ -239,8 +239,15 @@ if __name__ == '__main__':
     num_categories = 10
     budget = 5
     num_of_each_species = 1
+    costs = np.zeros(num_images)
+    # for i in range(int(num_images/2)):
+    #     costs[i] = 1.0
+    # for i in range(int(num_images/2), num_images):
+    #     costs[i] = 0.5
+    for i in range(num_images):
+        costs[i] = 1.0
 
-    prob_val, alloc_val, alloc_img_val = solve_lp(num_images, num_categories, budget, num_of_each_species, matrix)
+    prob_val, alloc_val, alloc_img_val = solve_lp(num_images, num_categories, budget, num_of_each_species, matrix, costs)
     # print(prob_val)
     # print(alloc_img_val)
     print("lp result = {}".format(prob_val))
