@@ -184,32 +184,32 @@ if __name__ == '__main__':
 		model.save(f'{model_name}.h5')
 		print(f'Keras model saved to {model_name+".h5"}')
 
-		loss_obj = np.vstack([train_history.history['loss'], train_history.history['val_loss'], train_history.history['acc'], train_history.history['val_acc']])
+		loss_obj = np.vstack([train_history.history['loss'], train_history.history['val_loss'], train_history.history['accuracy'], train_history.history['val_accuracy']])
 		np.savetxt(f'train-history-{model_name}.csv', loss_obj, delimiter=',', fmt='%.5f')
 
-		ypred_val = model.predict(Xval)
-		val_accuracy = np.mean(np.argmax(ypred_val, axis=1) == np.argmax(yval, axis=1))
-		print(f"final val accuracy is {val_accuracy}")
+	ypred_val = model.predict(Xval)
+	val_accuracy = np.mean(np.argmax(ypred_val, axis=1) == np.argmax(yval, axis=1))
+	print(f"final val accuracy is {val_accuracy}")
 
-		ypred = model.predict(Xtest)
-		test_accuracy = np.mean(np.argmax(ypred, axis=1) == np.argmax(ytest, axis=1))
-		print(f"final test accuracy is {test_accuracy}")
+	ypred = model.predict(Xtest)
+	test_accuracy = np.mean(np.argmax(ypred, axis=1) == np.argmax(ytest, axis=1))
+	print(f"final test accuracy is {test_accuracy}")
 
-		fig, ax = plt.subplots(2, 1, figsize=(10, 8))
-		
-		ax[0].hist(np.argmax(ypred_val, axis=1))
-		ax[1].hist(np.argmax(ypred, axis=1))
-		
-		if top10:
-			ax[0].set_xticks([])
-			ax[0].set_xticklabels([])
-			ax[1].set_xticks(np.arange(10))
-			ax[1].set_xticklabels(np.arange(10))
-		else:
-			ax[0].set_xticks([])
-			ax[0].set_xticklabels([])
-			ax[1].set_xticks(np.arange(20))
-			ax[1].set_xticklabels(np.arange(20))
+	fig, ax = plt.subplots(2, 1, figsize=(10, 8))
+	
+	ax[0].hist(np.argmax(ypred_val, axis=1))
+	ax[1].hist(np.argmax(ypred, axis=1))
+	
+	if top10:
+		ax[0].set_xticks([])
+		ax[0].set_xticklabels([])
+		ax[1].set_xticks(np.arange(10))
+		ax[1].set_xticklabels(np.arange(10))
+	else:
+		ax[0].set_xticks([])
+		ax[0].set_xticklabels([])
+		ax[1].set_xticks(np.arange(20))
+		ax[1].set_xticklabels(np.arange(20))
 
-		plt.savefig(f'{model_name}-hist.pdf')
+	plt.savefig(f'{model_name}-hist.pdf')
 
