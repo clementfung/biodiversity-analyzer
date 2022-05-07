@@ -221,7 +221,7 @@ def process_csv(filename, n):
         reader = csv.reader(file)
         counter = 0
         for row in reader:
-            if counter > n:
+            if counter >= n:
                 break
             result.append(row)
             counter += 1
@@ -229,21 +229,47 @@ def process_csv(filename, n):
     result = np.array(result, dtype=float)
     return result
 
+def process_costs_csv(filename, n):
+    result = []
+    with open(filename) as file:
+        reader = csv.reader(file)
+        counter = 0
+        for row in reader:
+            if counter >= n:
+                break
+            new_row = []
+            for elem in row[0].split(' '):
+                new_row.append(float(elem))
+            result.append(new_row)
+            counter += 1
+    file.close()
+    result = np.array(result, dtype=float)
+    return result
+
 def uniform_costs(n):
-    costs = np.ones(n, dtype=float)
-    return costs
+    return np.ones(n, dtype=float)
+
+# compute expected cost for each image based on the probability prediction of coverages
+def process_costs(raw_costs):
+    # 1.875 = 30/16, the average of the 16 coverage types
+    costs_for_coverage_categories = [1.875, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 3.0, 3.0, 3.0, 2.0, 2.0, 2.0, 1.0, 3.0, 3.0]
+    costs_for_coverage_categories = np.array(costs_for_coverage_categories)
+    result = []
+    for i in range(raw_costs.shape[0]):
+        result.append(np.dot(raw_costs[i], costs_for_coverage_categories))
+    return np.array(result)
 
 if __name__ == '__main__':
     num_images = 15
     num_categories = 10
-    budget = 5
+    budget = 10
     num_of_each_species = 1
     matrix = process_csv('sample_predictions.csv', num_images)
 
-    # costs = np.zeros(num_images)
-    # for i in range(num_images):
-    #     costs[i] = 1.0
-    costs = uniform_costs(num_images)
+    raw_costs = process_costs_csv('sample_coverages.csv', num_images)
+    costs = process_costs(raw_costs)
+
+    # costs = uniform_costs(num_images)
 
     prob_val, alloc_val, alloc_img_val = solve_lp(num_images, num_categories, budget, num_of_each_species, matrix, costs)
     # print(prob_val)
