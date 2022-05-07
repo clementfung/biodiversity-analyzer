@@ -1,0 +1,17 @@
+0    0 No data
+2    18 11 Open Water
+1    19 12 Perennial Ice/Snow
+1    20 21 Developed, Open Space
+1    21 22 Developed, Low Intensity
+1    22 23 Developed, Medium Intensity
+1    23 24 Developed, High Intensity
+1    24 31 Barren Land (Rock/Sand/Clay)
+3    25 41 Deciduous Forest
+3    26 42 Evergreen Forest
+3    27 43 Mixed Forest
+2    28 52 Shrub/Scrub
+2    29 71 Grassland/Herbaceous
+2    30 81 Pasture/Hay
+1    31 82 Cultivated Crops
+3    32 90 Woody Wetlands
+3    33 95 Emergent Herbaceous Wetland
