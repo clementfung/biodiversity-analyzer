@@ -53,7 +53,8 @@ if __name__ == '__main__':
 	units_arr = [4, 8, 16, 32, 64]
 	reg_arr = [0.001, 0.005, 0.01, 0.05, 0.1]
 
-	plot_obj = np.zeros((len(layers_arr), len(units_arr), len(reg_arr)))
+	plot_obj_train = np.zeros((len(layers_arr), len(units_arr), len(reg_arr)))
+	plot_obj_val = np.zeros((len(layers_arr), len(units_arr), len(reg_arr)))
 
 	for layers_idx in range(len(layers_arr)):
 		for units_idx in range(len(units_arr)):
@@ -67,35 +68,70 @@ if __name__ == '__main__':
 				model_name = f'CNN10-layers{layers}-units{units}-kernel{kernel}-reg{regularizer}-{data_type}'
 				loss_obj = np.loadtxt(f'output-data/train-history-{model_name}.csv', delimiter=',')
 
+				print(f'For model {model_name} Best train accuracy is {np.max(loss_obj[2])}')
 				print(f'For model {model_name} Best val accuracy is {np.max(loss_obj[3])}')
 
-				plot_obj[layers_idx, units_idx, reg_idx] = np.max(loss_obj[3])
+				plot_obj_train[layers_idx, units_idx, reg_idx] = np.max(loss_obj[2])
+				plot_obj_val[layers_idx, units_idx, reg_idx] = np.max(loss_obj[3])
 
 	# Pick one regularization
-	cut_plot_obj = plot_obj[:, :, 2]
+	for ri in range(len(reg_arr)):
+		
+		reg_amt = reg_arr[ri]
 
-	fig, ax = plt.subplots(1, 1, figsize=(10, 6))
+		cut_plot_obj = plot_obj_train[:, :, ri]
 
-	width = 0.15
-	n_col = len(layers_arr)
+		fig, ax = plt.subplots(1, 1, figsize=(10, 6))
 
-	ax.set_title('Hyperparameter Search for IR models', fontsize=24)
-	ax.set_ylim([0, 0.5])
-	ax.bar(np.arange(n_col) - 2 * width, cut_plot_obj[:, 0], width, label='4 units/layer')
-	ax.bar(np.arange(n_col) - 1 * width, cut_plot_obj[:, 1], width, label='8 units/layer')
-	ax.bar(np.arange(n_col) + 0 * width, cut_plot_obj[:, 2], width, label='16 units/layer')
-	ax.bar(np.arange(n_col) + 1 * width, cut_plot_obj[:, 3], width, label='32 units/layer')
-	ax.bar(np.arange(n_col) + 2 * width, cut_plot_obj[:, 4], width, label='64 units/layer')
+		width = 0.15
+		n_col = len(layers_arr)
 
-	ax.set_axisbelow(True)
-	ax.grid(True, which='major', axis='y', linestyle = '--')
+		ax.set_title(f'Hyperparameter Search for {data_type.upper()} models', fontsize=24)
+		ax.set_ylim([0, 1.05])
+		ax.bar(np.arange(n_col) - 2 * width, cut_plot_obj[:, 0], width, label='4 filters')
+		ax.bar(np.arange(n_col) - 1 * width, cut_plot_obj[:, 1], width, label='8 filters')
+		ax.bar(np.arange(n_col) + 0 * width, cut_plot_obj[:, 2], width, label='16 filters')
+		ax.bar(np.arange(n_col) + 1 * width, cut_plot_obj[:, 3], width, label='32 filters')
+		ax.bar(np.arange(n_col) + 2 * width, cut_plot_obj[:, 4], width, label='64 filters')
 
-	ax.legend(loc='best', ncol=2, fontsize=24)
+		ax.set_axisbelow(True)
+		ax.grid(True, which='major', axis='y', linestyle = '--')
 
-	ax.set_xticks(np.arange(n_col))
-	ax.set_xticklabels(layers_arr, fontsize=16)
-	ax.set_xlabel('Layers', fontsize=24)
-	ax.set_ylabel('Validation Accuracy', fontsize=24)
+		ax.legend(loc='best', ncol=3, fontsize=20)
 
-	fig.tight_layout(rect=[0, 0, 1, 1])
-	plt.savefig(f'plot-hyperparam-{data_type}.pdf')
+		ax.set_xticks(np.arange(n_col))
+		ax.set_xticklabels(layers_arr, fontsize=16)
+		ax.set_xlabel('Layers', fontsize=24)
+		ax.set_ylabel('Training Accuracy', fontsize=24)
+
+		fig.tight_layout(rect=[0, 0, 1, 1])
+		plt.savefig(f'plot-hyperparam-{data_type}-train-{reg_amt}.pdf')
+
+		####################################################
+		cut_plot_obj = plot_obj_val[:, :, 4]
+
+		fig, ax = plt.subplots(1, 1, figsize=(10, 6))
+
+		width = 0.15
+		n_col = len(layers_arr)
+
+		ax.set_title(f'Hyperparameter Search for {data_type.upper()} models', fontsize=24)
+		ax.set_ylim([0, 1.05])
+		ax.bar(np.arange(n_col) - 2 * width, cut_plot_obj[:, 0], width, label='4 filters')
+		ax.bar(np.arange(n_col) - 1 * width, cut_plot_obj[:, 1], width, label='8 filters')
+		ax.bar(np.arange(n_col) + 0 * width, cut_plot_obj[:, 2], width, label='16 filters')
+		ax.bar(np.arange(n_col) + 1 * width, cut_plot_obj[:, 3], width, label='32 filters')
+		ax.bar(np.arange(n_col) + 2 * width, cut_plot_obj[:, 4], width, label='64 filters')
+
+		ax.set_axisbelow(True)
+		ax.grid(True, which='major', axis='y', linestyle = '--')
+
+		ax.legend(loc='best', ncol=3, fontsize=20)
+
+		ax.set_xticks(np.arange(n_col))
+		ax.set_xticklabels(layers_arr, fontsize=16)
+		ax.set_xlabel('Layers', fontsize=24)
+		ax.set_ylabel('Validation Accuracy', fontsize=24)
+
+		fig.tight_layout(rect=[0, 0, 1, 1])
+		plt.savefig(f'plot-hyperparam-{data_type}-val-{reg_amt}.pdf')

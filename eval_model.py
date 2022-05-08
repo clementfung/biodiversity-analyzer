@@ -39,35 +39,14 @@ def get_argparser():
 
 	return parser
 
-if __name__ == '__main__':
+def get_grid_results(data_type, Xtrain, ytrain, Xtest, ytest):
 
-	parser = get_argparser()
-	args = parser.parse_args()
-	data_type = args.data_type
-
-	os.environ["CUDA_VISIBLE_DEVICES"] = '-1'
-
-	########################
-	# Load and process data
-	########################
-	
-	Xrgb = np.load(f'X{data_type}_top10.npy')
-	yrgb = np.load('y_top10.npy')
-	yrgb_cat = to_categorical(yrgb)
-
-	if data_type == 'ir' or data_type == 'alti':
-		Xrgb = np.expand_dims(Xrgb, axis=3)
-
-	# Performs a 60/20/20 split
-	Xtrain1, Xtest, ytrain1, ytest = train_test_split(Xrgb, yrgb_cat, test_size=0.2, random_state=42)
-	Xtrain, Xval, ytrain, yval = train_test_split(Xtrain1, ytrain1, test_size=0.25, random_state=42)
-
-	train_results = np.zeros((4, 4, 3))
-	test_results = np.zeros((4, 4, 3))
+	train_results = np.zeros((4, 5, 5))
+	test_results = np.zeros((4, 5, 5))
 
 	layers_arr = [1, 2, 3, 4]
-	units_arr = [4, 8, 16, 32]
-	reg_arr = [0.01, 0.05, 0.1]
+	units_arr = [4, 8, 16, 32, 64]
+	reg_arr = [0.001, 0.005, 0.01, 0.05, 0.1]
 
 	for layers_idx in range(len(layers_arr)):
 		for units_idx in range(len(units_arr)):
@@ -104,3 +83,47 @@ if __name__ == '__main__':
 
 	np.save(f'CNN10-train-accuracy-{data_type}.npy', train_results)
 	np.save(f'CNN10-test-accuracy-{data_type}.npy', test_results)
+
+def get_proba(data_type, Xval, yval, Xtest, ytest, layers=4, units=32, reg=0.1):
+
+	model_name = f'CNN10-layers{layers}-units{units}-kernel5-reg{reg}-{data_type}'			
+	model = load_model(f'{model_name}.h5')
+
+	########################
+	# Evaluate model
+	########################
+
+	print(f'For {model_name}')
+
+	ytest_proba = model.predict(Xtest, batch_size=32)
+	yval_proba = model.predict(Xval, batch_size=32)
+	
+	np.save(f'CNN10-valproba-{data_type}.npy', yval_proba)
+	np.save(f'CNN10-testproba-{data_type}.npy', ytest_proba)
+	np.save(f'CNN10-yval-{data_type}.npy', yval)
+	np.save(f'CNN10-ytest-{data_type}.npy', ytest)
+
+if __name__ == '__main__':
+
+	parser = get_argparser()
+	args = parser.parse_args()
+	data_type = args.data_type
+
+	os.environ["CUDA_VISIBLE_DEVICES"] = '-1'
+
+	########################
+	# Load and process data
+	########################
+	
+	Xrgb = np.load(f'X{data_type}_top10.npy')
+	yrgb = np.load('y_top10.npy')
+	yrgb_cat = to_categorical(yrgb)
+
+	if data_type == 'ir' or data_type == 'alti':
+		Xrgb = np.expand_dims(Xrgb, axis=3)
+
+	# Performs a 60/20/20 split
+	Xtrain1, Xtest, ytrain1, ytest = train_test_split(Xrgb, yrgb_cat, test_size=0.2, random_state=42)
+	Xtrain, Xval, ytrain, yval = train_test_split(Xtrain1, ytrain1, test_size=0.25, random_state=42)
+
+	get_proba('rgb', Xval, yval, Xtest, ytest)	

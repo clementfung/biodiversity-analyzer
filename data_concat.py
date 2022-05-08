@@ -61,7 +61,7 @@ def concat_simple():
 	Xalti = np.load(f'Xalti_top{n_classes}.npy')
 	Xcover = np.load(f'Xcoverage_top{n_classes}.npy')		
 
-	Xdata = np.zeros((n_samples, 19))
+	Xdata = np.zeros((n_samples, 23))
 
 	# First feature: average altitude
 
@@ -70,12 +70,20 @@ def concat_simple():
 	Xalti = Xalti / np.abs(np.max(Xalti))
 	Xdata[:, 0] = np.mean(Xalti, axis=(1, 2))
 
-	# Second feature: average Ir
+	# Second feature: average ir
 	Xdata[:, 1] = np.mean(Xir, axis=(1, 2))
+
+	# Add 10% and 90% quantiles
+	Xdata[:, 2] = np.quantile(Xalti, 0.1, axis=(1, 2))
+	Xdata[:, 3] = np.quantile(Xalti, 0.1, axis=(1, 2))
+	Xdata[:, 4] = np.quantile(Xir, 0.9, axis=(1, 2))
+	Xdata[:, 5] = np.quantile(Xir, 0.9, axis=(1, 2))
+
+	pdb.set_trace()
 
 	# Filter out coverages for USA
 	cover_column_idx = np.array([0, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33])
-	Xdata[:, 2:] = Xcover[:, cover_column_idx]
+	Xdata[:, 6:] = Xcover[:, cover_column_idx]
 
 	np.save('Xsimple.npy', Xdata)
 

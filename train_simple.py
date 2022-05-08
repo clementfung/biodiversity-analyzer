@@ -45,27 +45,12 @@ if __name__ == '__main__':
 		n_classes = 20
 		n_samples = 14363
 	
-	data_amount = 'small'
+	data_amount = 'medium'
 
 	parser = get_argparser()
 	args = parser.parse_args()
-
-
-	########################
-	# Define model
-	########################
 	model_type = args.model_type
 	data_type = args.data_type
-	
-	if model_type == 'KNN':
-		model = sklearn.neighbors.KNeighborsClassifier(n_neighbors=5)
-		model_name = 'KNN'
-	elif model_type == 'RF':
-		model = sklearn.ensemble.RandomForestClassifier(max_depth=5, n_estimators=500)
-		model_name = 'RF'
-	else:
-		print(f'Unknown model {model_type}')
-		exit(0)
 
 	########################
 	# Load and process data
@@ -115,56 +100,140 @@ if __name__ == '__main__':
 		Xval = Xval.reshape(Xval.shape[0], -1)
 		Xtest = Xtest.reshape(Xtest.shape[0], -1)
 
-	#########################
-	# Train
-	#########################
-	model.fit(Xtrain, ytrain)
-
 	########################
-	# Save and evaluate model
+	# Define model
 	########################
-	ypred_train = model.predict(Xtrain)
-	ypred_val = model.predict(Xval)
-	ypred = model.predict(Xtest)
-
-	########################
-	# Evaluate: accuracy
-	########################
-	train_accuracy = np.mean(ypred_train == ytrain)
-	print(f"final train accuracy is {train_accuracy}")
-
-	val_accuracy = np.mean(ypred_val== yval)
-	print(f"final val accuracy is {val_accuracy}")
 	
-	test_accuracy = np.mean(ypred == ytest)
-	print(f"final test accuracy is {test_accuracy}")
+	models = []
 
-	########################
-	# Evaluate: top-K rank
-	########################
-	ytrain_proba = model.predict_proba(Xtrain)
-	ytrain_ranks = np.zeros(len(ytrain_proba))
+	if model_type == 'KNN':
+		models.append(sklearn.neighbors.KNeighborsClassifier(n_neighbors=1))
+		models.append(sklearn.neighbors.KNeighborsClassifier(n_neighbors=3))
+		models.append(sklearn.neighbors.KNeighborsClassifier(n_neighbors=5))
+		models.append(sklearn.neighbors.KNeighborsClassifier(n_neighbors=7))
+		models.append(sklearn.neighbors.KNeighborsClassifier(n_neighbors=9))
+		models.append(sklearn.neighbors.KNeighborsClassifier(n_neighbors=11))
+		model_name = 'KNN'
+	elif model_type == 'RF':
+		model_name = 'RF'
+		models.append(sklearn.ensemble.RandomForestClassifier(max_depth=3, n_estimators=200))
+		models.append(sklearn.ensemble.RandomForestClassifier(max_depth=5, n_estimators=200))
+		models.append(sklearn.ensemble.RandomForestClassifier(max_depth=7, n_estimators=200))
+		models.append(sklearn.ensemble.RandomForestClassifier(max_depth=9, n_estimators=200))
+		models.append(sklearn.ensemble.RandomForestClassifier(max_depth=11, n_estimators=200))
+		models.append(sklearn.ensemble.RandomForestClassifier(max_depth=13, n_estimators=200))
+		models.append(sklearn.ensemble.RandomForestClassifier(max_depth=15, n_estimators=200))
+		models.append(sklearn.ensemble.RandomForestClassifier(max_depth=17, n_estimators=200))
+		models.append(sklearn.ensemble.RandomForestClassifier(max_depth=19, n_estimators=200))
+		models.append(sklearn.ensemble.RandomForestClassifier(max_depth=21, n_estimators=200))
+	else:
+		print(f'Unknown model {model_type}')
+		exit(0)
 
-	yval_proba = model.predict_proba(Xval)
-	yval_ranks = np.zeros(len(yval_proba))
+	all_train_ranks = np.zeros((len(models), n_classes))
+	all_val_ranks = np.zeros((len(models), n_classes))
+	all_test_ranks = np.zeros((len(models), n_classes))
 
-	ytest_proba = model.predict_proba(Xtest)
-	ytest_ranks = np.zeros(len(ytest_proba))
+	for model_idx in range(len(models)):
 
-	for i in range(len(ytrain_proba)):
-		ytrain_ranks[i] = utils.scores_to_rank(ytrain_proba[i], ytrain[i])
+		#########################
+		# Train
+		#########################
+		
+		model = models[model_idx]
+		model.fit(Xtrain, ytrain)
 
-	for i in range(len(yval_proba)):
-		yval_ranks[i] = utils.scores_to_rank(yval_proba[i], yval[i])
+		########################
+		# Save and evaluate model
+		########################
+		ypred_train = model.predict(Xtrain)
+		ypred_val = model.predict(Xval)
+		ypred = model.predict(Xtest)
 
-	for i in range(len(ytest_proba)):
-		ytest_ranks[i] = utils.scores_to_rank(ytest_proba[i], ytest[i])
+		########################
+		# Evaluate: accuracy
+		########################
+		train_accuracy = np.mean(ypred_train == ytrain)
+		print(f"final train accuracy is {train_accuracy}")
 
-	print(f'Train avgrank: {np.mean(ytrain_ranks)}')
-	print(f'Val avgrank: {np.mean(yval_ranks)}')
-	print(f'Test avgrank: {np.mean(ytest_ranks)}')
+		val_accuracy = np.mean(ypred_val== yval)
+		print(f"final val accuracy is {val_accuracy}")
+		
+		test_accuracy = np.mean(ypred == ytest)
+		print(f"final test accuracy is {test_accuracy}")
 
-	cdf_obj = utils.plot_cdf(ytest_ranks, max_rank=n_classes)
+		########################
+		# Evaluate: top-K rank
+		########################
+		ytrain_proba = model.predict_proba(Xtrain)
+		ytrain_ranks = np.zeros(len(ytrain_proba))
+
+		yval_proba = model.predict_proba(Xval)
+		yval_ranks = np.zeros(len(yval_proba))
+
+		ytest_proba = model.predict_proba(Xtest)
+		ytest_ranks = np.zeros(len(ytest_proba))
+
+		for i in range(len(ytrain_proba)):
+			ytrain_ranks[i] = utils.scores_to_rank(ytrain_proba[i], ytrain[i])
+
+		for i in range(len(yval_proba)):
+			yval_ranks[i] = utils.scores_to_rank(yval_proba[i], yval[i])
+
+		for i in range(len(ytest_proba)):
+			ytest_ranks[i] = utils.scores_to_rank(ytest_proba[i], ytest[i])
+
+		# np.save(f'{model_name}{model_idx}-valproba-{data_type}.npy', yval_proba)
+		# np.save(f'{model_name}{model_idx}-testproba-{data_type}.npy', ytest_proba)
+		# np.save(f'{model_name}{model_idx}-yval-{data_type}.npy', yval)
+		# np.save(f'{model_name}{model_idx}-ytest-{data_type}.npy', ytest)
+
+		cdf_obj = utils.plot_cdf(ytrain_ranks, max_rank=n_classes)
+		all_train_ranks[model_idx] = cdf_obj
+
+		cdf_obj = utils.plot_cdf(yval_ranks, max_rank=n_classes)
+		all_val_ranks[model_idx] = cdf_obj
+
+		cdf_obj = utils.plot_cdf(ytest_ranks, max_rank=n_classes)
+		all_test_ranks[model_idx] = cdf_obj
+
+	####################################
+	## Tr/Val/Test plots
+	####################################
+
+	fig, ax = plt.subplots(1, 1, figsize=(8, 6))
+
+	if model_type == 'RF':
+		ax.set_title('Random Forest Top-1 Accuracy', fontsize=20)
+		ax.plot(np.arange(3, 22, 2), all_train_ranks[:, 0], lw=2, label='Train')
+		ax.plot(np.arange(3, 22, 2), all_val_ranks[:, 0], lw=2, label='Validation')
+		ax.set_xticks(np.arange(3, 22, 2))
+		ax.set_xticklabels(np.arange(3, 22, 2))
+		ax.set_xlabel('Max Depth', fontsize=16)
+	elif model_type == 'KNN':
+		ax.set_title('KNN Top-1 Accuracy', fontsize=20)
+		ax.plot(np.arange(1, 12, 2), all_train_ranks[:, 0], lw=2, label='Train')
+		ax.plot(np.arange(1, 12, 2), all_val_ranks[:, 0], lw=2, label='Validation')
+		ax.set_xticks(np.arange(1, 12, 2))
+		ax.set_xticklabels(np.arange(1, 12, 2))
+		ax.set_xlabel('# of Nearest Neighbors', fontsize=16)
+
+	ax.set_ylim([0, 1.05])
+	ax.set_yticks(np.arange(0, 1.05, 0.1))
+
+	ax.set_axisbelow(True)
+	ax.grid(True, which='major', axis='y', linestyle = '--')
+
+	ax.legend(fontsize=20, loc='best')
+
+	fig.tight_layout()
+	plt.savefig(f'{model_name}_splits.pdf')
+	plt.close()
+
+	####################################
+	## CDFs
+	####################################
+	
 	max_rank = n_classes
 
 	fig, ax = plt.subplots(1, 1, figsize=(8, 6))
